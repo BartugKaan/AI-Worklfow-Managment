@@ -55,6 +55,22 @@ export function useAgents() {
     }
   }
 
+  // Get single agent
+  const getAgent = async (agentId: string): Promise<Agent | null> => {
+    try {
+      const response = await fetch(`/api/agents/${agentId}`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch agent')
+      }
+      const agent = await response.json()
+      return agent
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+      console.error('Error fetching agent:', err)
+      return null
+    }
+  }
+
   // Create new agent
   const createAgent = async (
     agentData: CreateAgentData
@@ -78,6 +94,36 @@ export function useAgents() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
       console.error('Error creating agent:', err)
+      return null
+    }
+  }
+
+  // Update existing agent
+  const updateAgent = async (
+    agentId: string,
+    agentData: CreateAgentData
+  ): Promise<Agent | null> => {
+    try {
+      const response = await fetch(`/api/agents/${agentId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(agentData),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update agent')
+      }
+
+      const updatedAgent = await response.json()
+      setAgents((prev) =>
+        prev.map((agent) => (agent.id === agentId ? updatedAgent : agent))
+      )
+      return updatedAgent
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+      console.error('Error updating agent:', err)
       return null
     }
   }
@@ -155,7 +201,9 @@ export function useAgents() {
     agents,
     loading,
     error,
+    getAgent,
     createAgent,
+    updateAgent,
     updateAgentStatus,
     deleteAgent,
     getActiveAgent,

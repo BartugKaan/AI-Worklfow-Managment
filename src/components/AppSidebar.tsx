@@ -18,7 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu'
-import { Bot, Plus, Loader2, MoreVertical, Trash2 } from 'lucide-react'
+import { Bot, Plus, Loader2, MoreVertical, Trash2, Edit } from 'lucide-react'
 import { Button } from './ui/button'
 import { useAgents } from '@/hooks/useAgents'
 
@@ -48,6 +48,11 @@ function AppSidebar() {
       console.error('Error deleting agent:', error)
       alert('Failed to delete agent. Please try again.')
     }
+  }
+
+  const handleEditAgent = async (agentId: string) => {
+    // Navigate to edit agent page
+    window.location.href = `/edit-agent/${agentId}`
   }
 
   if (error) {
@@ -120,11 +125,7 @@ function AppSidebar() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className={`h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity ${
-                                agent.isActive
-                                  ? 'hover:bg-gray-700 text-white'
-                                  : 'hover:bg-gray-200 text-gray-600'
-                              }`}
+                              className={`h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity`}
                               onClick={(e: React.MouseEvent) =>
                                 e.stopPropagation()
                               }
@@ -133,7 +134,6 @@ function AppSidebar() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-32">
-                            {/* Maybe can add more functionality here ?*/}
                             <DropdownMenuItem
                               onClick={(e: React.MouseEvent) => {
                                 e.stopPropagation()
@@ -143,6 +143,15 @@ function AppSidebar() {
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e: React.MouseEvent) => {
+                                e.stopPropagation()
+                                handleEditAgent(agent.id)
+                              }}
+                            >
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
