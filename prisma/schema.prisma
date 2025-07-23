@@ -1,0 +1,30 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Agent {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  systemPrompt String
+  queryPrompt String
+  isActive    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Tool selection checkboxes
+  tool_selection_checkboxes_tool1           Boolean @default(false)
+  tool_selection_checkboxes_webSearch       Boolean @default(false)
+  tool_selection_checkboxes_codeExecution   Boolean @default(false)
+  tool_selection_checkboxes_fileAnalysis    Boolean @default(false)
+  
+  @@map("agents")
+}
