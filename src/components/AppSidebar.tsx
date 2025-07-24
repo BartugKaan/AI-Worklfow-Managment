@@ -62,15 +62,23 @@ function AppSidebar() {
   return (
     <Sidebar className="bg-white text-black border-r border-gray-200">
       <SidebarHeader className="p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-black">Agents</h2>
           <Link href="/add-agent">
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" size="sm" className="gap-2">
               <Plus className="w-4 h-4" />
               Add Agent
             </Button>
           </Link>
         </div>
+        
+        {/* Workflow Builder Link */}
+        <Link href="/workflow">
+          <Button variant="outline" className="w-full gap-2 border-blue-200 text-blue-700 hover:bg-blue-50">
+            <Bot className="w-4 h-4" />
+            Workflow Builder
+          </Button>
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

@@ -43,7 +43,7 @@ export default function Home() {
           </div>
 
           {/* Getting Started Section */}
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
               <div className="flex items-center gap-3 mb-4">
                 <Plus className="w-6 h-6 text-black" />
@@ -75,6 +75,25 @@ export default function Home() {
               <Button variant="outline" disabled={agents.length === 0}>
                 {agents.length === 0 ? 'No Agents Yet' : 'Select from Sidebar'}
               </Button>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <Bot className="w-6 h-6 text-blue-600" />
+                <h3 className="text-xl font-semibold text-blue-900">
+                  Workflow Builder
+                </h3>
+              </div>
+              <p className="text-gray-600 mb-4">
+                Create drag-and-drop workflows with your agents. Test multi-agent 
+                processes and automate complex tasks.
+              </p>
+              <Link href="/workflow">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Bot className="w-4 h-4 mr-2" />
+                  Build Workflow
+                </Button>
+              </Link>
             </div>
           </div>
 
