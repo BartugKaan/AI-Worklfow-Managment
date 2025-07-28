@@ -19,7 +19,7 @@ export const StartNode = () => {
       <Handle
         type="source"
         position={Position.Right}
-        className="!w-5 !h-5 !bg-emerald-600 !border-3 !border-white !shadow-xl hover:!scale-150 transition-all duration-200 !rounded-full"
+        className="custom-handle-emerald"
         style={{ right: '-10px' }}
       />
       {/* Connection hint circle */}
