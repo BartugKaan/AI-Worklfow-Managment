@@ -10,6 +10,7 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
+  useSidebar,
 } from './ui/sidebar'
 import { Sidebar } from './ui/sidebar'
 import {
@@ -18,12 +19,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu'
-import { Bot, Plus, Loader2, MoreVertical, Trash2, Edit } from 'lucide-react'
+import { Bot, Plus, Loader2, MoreVertical, Trash2, Edit, X } from 'lucide-react'
 import { Button } from './ui/button'
 import { useAgents } from '@/hooks/useAgents'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 function AppSidebar() {
   const { agents, loading, error, deleteAgent } = useAgents()
+  const { toggleSidebar } = useSidebar()
+  const isMobile = useIsMobile()
 
   const handleAgentClick = async (agentId: string) => {
     // Always navigate to the agent chat page
@@ -60,17 +64,47 @@ function AppSidebar() {
   }
 
   return (
-    <Sidebar className="bg-white text-black border-r border-gray-200">
+    <Sidebar 
+      className="bg-white text-black border-r border-gray-200 w-full max-w-[85vw] md:w-80 md:max-w-none"
+      collapsible="offcanvas"
+    >
       <SidebarHeader className="p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-black">Agents</h2>
-          <Link href="/add-agent">
-            <Button variant="outline" className="gap-2">
-              <Plus className="w-4 h-4" />
-              Add Agent
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            {/* Mobile Close Button */}
+            {isMobile && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleSidebar}
+                className="h-8 w-8 p-0 md:hidden"
+                aria-label="Close sidebar"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+            <Link href="/add-agent">
+              <Button variant="outline" size="sm" className="gap-2 min-h-[44px] px-3">
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Add Agent</span>
+                <span className="sm:hidden">Add</span>
+              </Button>
+            </Link>
+          </div>
         </div>
+
+        {/* Workflow Builder Link */}
+        <Link href="/workflow">
+          <Button
+            variant="outline"
+            className="w-full gap-2 border-blue-200 text-blue-700 hover:bg-blue-50 min-h-[44px] justify-start"
+          >
+            <Bot className="w-4 h-4" />
+            <span className="hidden sm:inline">Workflow Builder</span>
+            <span className="sm:hidden">Workflow</span>
+          </Button>
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -92,7 +126,7 @@ function AppSidebar() {
                 agents.map((agent) => (
                   <SidebarMenuItem key={agent.id}>
                     <div
-                      className={`w-full rounded-lg mb-2 transition-colors py-4 px-3 group ${
+                      className={`w-full rounded-lg mb-2 transition-colors py-4 px-3 group min-h-[60px] ${
                         agent.isActive
                           ? 'bg-black text-white'
                           : 'text-gray-700 hover:bg-gray-100 hover:text-black'
@@ -125,7 +159,7 @@ function AppSidebar() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className={`h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity`}
+                              className={`h-10 w-10 p-0 opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity touch-manipulation`}
                               onClick={(e: React.MouseEvent) =>
                                 e.stopPropagation()
                               }

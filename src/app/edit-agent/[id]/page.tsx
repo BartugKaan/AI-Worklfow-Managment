@@ -68,7 +68,7 @@ function EditAgentPage() {
     }
 
     loadAgent()
-  }, [agentId])
+  }, [agentId, getAgent])
 
   const handleInputChange = (field: keyof CreateAgentData, value: string) => {
     setFormData((prev) => ({

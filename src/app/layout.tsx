@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { SidebarProvider } from '@/components/ui/sidebar'
-import AppSidebar from '@/components/AppSidebar'
+import SidebarLayout from '@/components/SidebarLayout'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   description: 'Multi-Agent Workflow Management System',
 }
 
+
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,13 +31,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white h-full`}
       >
-        <SidebarProvider>
-          <div className="flex h-full w-full">
-            <AppSidebar />
-            <main className="flex-1 min-w-0 h-full">
-              <div className="h-full w-full">{children}</div>
-            </main>
-          </div>
+        <SidebarProvider defaultOpen={false}>
+          <SidebarLayout>{children}</SidebarLayout>
         </SidebarProvider>
       </body>
     </html>
