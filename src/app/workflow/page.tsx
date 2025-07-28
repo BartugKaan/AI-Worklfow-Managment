@@ -263,8 +263,8 @@ export default function WorkflowPage() {
           ),
         },
         position: {
-          x: Math.random() * 300 + 250,
-          y: Math.random() * 200 + 150,
+          x: Math.random() * X_POSITION_RANGE + X_POSITION_OFFSET,
+          y: Math.random() * Y_POSITION_RANGE + Y_POSITION_OFFSET,
         },
         draggable: true,
       }
