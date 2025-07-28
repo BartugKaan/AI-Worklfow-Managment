@@ -71,10 +71,13 @@ function AppSidebar() {
             </Button>
           </Link>
         </div>
-        
+
         {/* Workflow Builder Link */}
         <Link href="/workflow">
-          <Button variant="outline" className="w-full gap-2 border-blue-200 text-blue-700 hover:bg-blue-50">
+          <Button
+            variant="outline"
+            className="w-full gap-2 border-blue-200 text-blue-700 hover:bg-blue-50"
+          >
             <Bot className="w-4 h-4" />
             Workflow Builder
           </Button>
