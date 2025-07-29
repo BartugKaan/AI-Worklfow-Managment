@@ -243,7 +243,7 @@ function EditAgentPage() {
                   type="button"
                   onClick={handleGenerateAgent}
                   disabled={isGenerating || !creationPrompt.trim()}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white cursor-pointer hover:shadow-lg transition-all duration-200"
                 >
                   {isGenerating ? (
                     <>

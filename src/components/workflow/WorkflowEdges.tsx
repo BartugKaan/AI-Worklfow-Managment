@@ -52,7 +52,7 @@ export const CustomEdge = ({
           <div className="flex items-center gap-2 bg-white/90 backdrop-blur-lg rounded-full shadow-xl border border-gray-200/50 p-1 edge-controls">
             {/* Add Agent Button */}
             <button
-              className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110"
+              className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110 cursor-pointer"
               onClick={(event) => {
                 event.stopPropagation()
                 const customEvent = new CustomEvent('addAgentOnEdge', {
@@ -67,7 +67,7 @@ export const CustomEdge = ({
 
             {/* Delete Edge Button */}
             <button
-              className="w-10 h-10 bg-gradient-to-br from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110"
+              className="w-10 h-10 bg-gradient-to-br from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110 cursor-pointer"
               onClick={(event) => {
                 event.stopPropagation()
                 const customEvent = new CustomEvent('deleteEdge', {

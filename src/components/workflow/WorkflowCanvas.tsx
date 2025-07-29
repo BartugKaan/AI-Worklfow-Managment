@@ -136,7 +136,7 @@ export const WorkflowCanvas = ({
                   {agents.map((agent) => (
                     <button
                       key={agent.id}
-                      className="w-full text-left p-3 text-sm hover:bg-blue-50 rounded-lg flex items-center gap-3 transition-all duration-200 group border border-transparent hover:border-blue-200"
+                      className="w-full text-left p-3 text-sm hover:bg-blue-50 rounded-lg flex items-center gap-3 transition-all duration-200 group border border-transparent hover:border-blue-200 cursor-pointer hover:shadow-md"
                       onClick={() => onAgentSelection(agent)}
                     >
                       <div className="w-8 h-8 bg-blue-500 group-hover:bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-200">

@@ -21,7 +21,7 @@ export const WorkflowHeader = ({
         <div className="flex items-center gap-4">
           <Link
             href="/"
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors duration-200"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors duration-200 cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
             <span className="font-medium">Back to Agents</span>
@@ -47,7 +47,7 @@ export const WorkflowHeader = ({
           <Button
             variant="outline"
             onClick={onSave}
-            className="flex items-center gap-2 hover:bg-gray-50"
+            className="flex items-center gap-2 hover:bg-gray-50 cursor-pointer hover:shadow-md transition-all duration-200"
           >
             <Save className="w-4 h-4" />
             Save Workflow
@@ -56,7 +56,7 @@ export const WorkflowHeader = ({
           <Button
             onClick={onTest}
             disabled={isRunningTest}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer hover:shadow-lg transition-all duration-200"
           >
             <Play className="w-4 h-4" />
             {isRunningTest ? 'Testing...' : 'Test Workflow'}
