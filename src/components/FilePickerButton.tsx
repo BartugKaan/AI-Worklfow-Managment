@@ -29,7 +29,7 @@ export default function FilePickerButton({
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />
-      <Button onClick={handleClick}>📁 Select File</Button>
+      <Button onClick={handleClick} className="cursor-pointer hover:shadow-md transition-all duration-200">📁 Select File</Button>
     </div>
   )
 }

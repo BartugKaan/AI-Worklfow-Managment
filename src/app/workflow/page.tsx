@@ -26,6 +26,11 @@ interface Agent {
   tool_selection_checkboxes_fileAnalysis: boolean
 }
 
+const X_POSITION_RANGE = 400
+const Y_POSITION_RANGE = 200
+const X_POSITION_OFFSET = 250
+const Y_POSITION_OFFSET = 150
+
 // Initial nodes and edges
 const initialNodes: Node[] = [
   {
@@ -349,7 +354,7 @@ export default function WorkflowPage() {
                 <p className="text-green-600 mb-4">{testResult}</p>
                 <button
                   onClick={() => setShowTestModal(false)}
-                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 cursor-pointer hover:shadow-lg transition-all duration-200"
                 >
                   Close
                 </button>

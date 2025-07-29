@@ -271,7 +271,7 @@ export default function AgentChatPage() {
 
             <Button
               onClick={sendMessage}
-              className="bg-black hover:bg-gray-800 text-white transition-colors"
+              className="bg-black hover:bg-gray-800 text-white cursor-pointer hover:shadow-lg transition-all duration-200"
               disabled={!currentMessage.trim() || isSending}
             >
               {isSending ? (

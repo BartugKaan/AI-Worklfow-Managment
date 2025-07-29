@@ -84,8 +84,8 @@ function AppSidebar() {
                 <X className="w-4 h-4" />
               </Button>
             )}
-            <Link href="/add-agent">
-              <Button variant="outline" size="sm" className="gap-2 min-h-[44px] px-3">
+            <Link href="/add-agent" className="cursor-pointer">
+              <Button variant="outline" size="sm" className="gap-2 min-h-[44px] px-3 cursor-pointer hover:shadow-md hover:bg-gray-50 transition-all duration-200">
                 <Plus className="w-4 h-4" />
                 <span className="hidden sm:inline">Add Agent</span>
                 <span className="sm:hidden">Add</span>
@@ -95,10 +95,10 @@ function AppSidebar() {
         </div>
 
         {/* Workflow Builder Link */}
-        <Link href="/workflow">
+        <Link href="/workflow" className="cursor-pointer">
           <Button
             variant="outline"
-            className="w-full gap-2 border-blue-200 text-blue-700 hover:bg-blue-50 min-h-[44px] justify-start"
+            className="w-full gap-2 border-blue-200 text-blue-700 hover:bg-blue-50 min-h-[44px] justify-start cursor-pointer hover:shadow-md transition-all duration-200"
           >
             <Bot className="w-4 h-4" />
             <span className="hidden sm:inline">Workflow Builder</span>
@@ -134,7 +134,7 @@ function AppSidebar() {
                     >
                       <div className="flex justify-between items-center">
                         <div
-                          className="flex items-start gap-3 flex-1 cursor-pointer"
+                          className="flex items-start gap-3 flex-1 cursor-pointer hover:opacity-80 transition-opacity duration-200"
                           onClick={() => handleAgentClick(agent.id)}
                         >
                           <div className="relative">
@@ -183,6 +183,7 @@ function AppSidebar() {
                                 e.stopPropagation()
                                 handleEditAgent(agent.id)
                               }}
+                              className="cursor-pointer"
                             >
                               <Edit className="mr-2 h-4 w-4" />
                               Edit

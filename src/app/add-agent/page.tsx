@@ -186,7 +186,7 @@ function AddAgentPage() {
                   type="button"
                   onClick={handleGenerateAgent}
                   disabled={isGenerating || !creationPrompt.trim()}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white cursor-pointer hover:shadow-lg transition-all duration-200"
                 >
                   {isGenerating ? (
                     <>
@@ -310,10 +310,11 @@ function AddAgentPage() {
                         onCheckedChange={(checked) =>
                           handleToolConfigChange('tool1', !!checked)
                         }
+                        className="cursor-pointer"
                       />
                       <Label
                         htmlFor="tool1"
-                        className="text-sm text-black font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        className="text-sm text-black font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer hover:text-blue-600 transition-colors duration-200"
                       >
                         Tool
                       </Label>
@@ -326,10 +327,11 @@ function AddAgentPage() {
                         onCheckedChange={(checked) =>
                           handleToolConfigChange('webSearch', !!checked)
                         }
+                        className="cursor-pointer"
                       />
                       <Label
                         htmlFor="webSearch"
-                        className="text-sm text-black font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        className="text-sm text-black font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer hover:text-blue-600 transition-colors duration-200"
                       >
                         Web Search
                       </Label>
@@ -342,10 +344,11 @@ function AddAgentPage() {
                         onCheckedChange={(checked) =>
                           handleToolConfigChange('codeExecution', !!checked)
                         }
+                        className="cursor-pointer"
                       />
                       <Label
                         htmlFor="codeExecution"
-                        className="text-sm text-black font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        className="text-sm text-black font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer hover:text-blue-600 transition-colors duration-200"
                       >
                         Code Execution
                       </Label>
@@ -358,10 +361,11 @@ function AddAgentPage() {
                         onCheckedChange={(checked) =>
                           handleToolConfigChange('fileAnalysis', !!checked)
                         }
+                        className="cursor-pointer"
                       />
                       <Label
                         htmlFor="fileAnalysis"
-                        className="text-sm text-black font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        className="text-sm text-black font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer hover:text-blue-600 transition-colors duration-200"
                       >
                         File Analysis
                       </Label>
@@ -373,7 +377,7 @@ function AddAgentPage() {
                 <div>
                   <Button
                     type="submit"
-                    className="w-full bg-black hover:bg-gray-800 text-white transition-colors py-3"
+                    className="w-full bg-black hover:bg-gray-800 text-white cursor-pointer hover:shadow-lg transition-all duration-200 py-3"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (

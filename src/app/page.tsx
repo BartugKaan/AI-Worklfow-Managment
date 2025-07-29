@@ -55,8 +55,8 @@ export default function Home() {
                 Start by creating a custom AI agent with specific prompts and
                 tool configurations.
               </p>
-              <Link href="/add-agent">
-                <Button className="bg-black hover:bg-gray-800 text-white w-full md:w-auto min-h-[44px]">
+              <Link href="/add-agent" className="cursor-pointer">
+                <Button className="bg-black hover:bg-gray-800 text-white w-full md:w-auto min-h-[44px] cursor-pointer hover:shadow-lg transition-shadow duration-200">
                   <Plus className="w-4 h-4 mr-2" />
                   Create Agent
                 </Button>
@@ -72,7 +72,7 @@ export default function Home() {
                 Select an agent from the sidebar to start a conversation and
                 leverage their capabilities.
               </p>
-              <Button variant="outline" disabled={agents.length === 0} className="w-full md:w-auto min-h-[44px]">
+              <Button variant="outline" disabled={agents.length === 0} className="w-full md:w-auto min-h-[44px] cursor-pointer hover:shadow-md transition-shadow duration-200">
                 {agents.length === 0 ? 'No Agents Yet' : 'Select from Sidebar'}
               </Button>
             </div>
@@ -88,8 +88,8 @@ export default function Home() {
                 Create drag-and-drop workflows with your agents. Test multi-agent 
                 processes and automate complex tasks.
               </p>
-              <Link href="/workflow">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white w-full md:w-auto min-h-[44px]">
+              <Link href="/workflow" className="cursor-pointer">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white w-full md:w-auto min-h-[44px] cursor-pointer hover:shadow-lg transition-shadow duration-200">
                   <Bot className="w-4 h-4 mr-2" />
                   Build Workflow
                 </Button>
