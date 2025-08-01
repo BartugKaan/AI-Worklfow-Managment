@@ -72,9 +72,17 @@ export default function Home() {
                 Select an agent from the sidebar to start a conversation and
                 leverage their capabilities.
               </p>
-              <Button variant="outline" disabled={agents.length === 0} className="w-full md:w-auto min-h-[44px] cursor-pointer hover:shadow-md transition-shadow duration-200">
-                {agents.length === 0 ? 'No Agents Yet' : 'Select from Sidebar'}
-              </Button>
+              <Button 
+                  variant="outline" 
+                  disabled={agents.length === 0} 
+                  onClick={() => {
+                    const trigger = document.querySelector('[data-sidebar="trigger"]') as HTMLButtonElement;
+                    trigger?.click();
+                  }}
+                  className="w-full md:w-auto min-h-[44px] cursor-pointer hover:shadow-md transition-shadow duration-200"
+                >
+                  {agents.length === 0 ? 'No Agents Yet' : 'Select from Sidebar'}
+                </Button>
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 md:p-6">
