@@ -150,9 +150,7 @@ function AddAgentPage() {
               </h1>
             </div>
           </div>
-          <Button variant="outline" className="gap-2">
-            <Save className="w-4 h-4" />
-          </Button>
+          
         </div>
       </div>
 
