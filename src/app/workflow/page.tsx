@@ -15,6 +15,7 @@ import { useAgents } from '@/hooks/useAgents'
 import { WorkflowHeader } from '@/components/workflow/WorkflowHeader'
 import { WorkflowSidebar } from '@/components/workflow/WorkflowSidebar'
 import { WorkflowCanvas } from '@/components/workflow/WorkflowCanvas'
+import { Trash2 } from 'lucide-react'
 
 // Agent interface
 interface Agent {
@@ -63,6 +64,12 @@ export default function WorkflowPage() {
   const { agents, loading } = useAgents()
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
+
+  // Move removeNode up here, before it's used
+  const removeNode = useCallback((nodeId: string) => {
+    setNodes((nodes) => nodes.filter(n => n.id !== nodeId));
+    setEdges((edges) => edges.filter(e => e.source !== nodeId && e.target !== nodeId));
+  }, [setNodes, setEdges]);
 
   // UI States
   const [selectedSystem, setSelectedSystem] = useState('react-flow')
@@ -121,65 +128,77 @@ export default function WorkflowPage() {
       if (!edge) return
 
       // Create a new agent node with modern styling
-      const newAgentNode: Node = {
-        id: `agent-${agent.id}-${Date.now()}`,
-        type: 'agentNode',
-        data: {
-          label: (
-            <div className="bg-gradient-to-br from-white via-slate-50 to-gray-50 border border-slate-200/60 rounded-2xl shadow-xl p-5 w-52 transition-all duration-300 hover:shadow-2xl hover:border-blue-300/40 backdrop-blur-sm">
-              {/* Agent Icon */}
-              <div className="flex justify-center mb-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
-                  <Bot className="w-7 h-7 text-white" />
-                </div>
-              </div>
+     const newAgentNode: Node = {
+  id: `agent-${agent.id}-${Date.now()}`,
+  type: 'agentNode',
+  data: {
+    label: (
+      <div className="relative bg-gradient-to-br from-white via-slate-50 to-gray-50 border border-slate-200/60 rounded-2xl shadow-xl p-7 w-52 transition-all duration-300 hover:shadow-2xl hover:border-blue-300/40 backdrop-blur-sm">
+        {/* Remove Button */}
+        <button
+          className="absolute right-2 top-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors duration-200"
+          onClick={(e) => {
+            e.stopPropagation();
+            setNodes((nodes) => nodes.filter(n => n.id !== `agent-${agent.id}-${Date.now()}`));
+            setEdges((edges) => edges.filter(e => e.source !== `agent-${agent.id}-${Date.now()}` && e.target !== `agent-${agent.id}-${Date.now()}`));
+          }}
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
 
-              {/* Agent Name */}
-              <div className="text-center mb-3">
-                <h4 className="font-bold text-gray-900 text-base truncate tracking-wide">
-                  {agent.name}
-                </h4>
-                <div className="w-8 h-0.5 bg-gradient-to-r from-blue-500 to-blue-600 mx-auto mt-2 rounded-full"></div>
-              </div>
+        {/* Agent Icon */}
+        <div className="flex justify-center mb-4">
+          <div className="w-14 h-14 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
+            <Bot className="w-7 h-7 text-white" />
+          </div>
+        </div>
 
-              {/* Agent Description */}
-              <p className="text-xs text-gray-600 text-center mb-4 line-clamp-2 leading-relaxed">
-                {agent.description}
-              </p>
+        {/* Agent Name */}
+        <div className="text-center mb-3">
+          <h4 className="font-bold text-gray-900 text-base truncate tracking-wide">
+            {agent.name}
+          </h4>
+          <div className="w-8 h-0.5 bg-gradient-to-r from-blue-500 to-blue-600 mx-auto mt-2 rounded-full"></div>
+        </div>
 
-              {/* Tools */}
-              {(agent.tool_selection_checkboxes_webSearch ||
-                agent.tool_selection_checkboxes_codeExecution ||
-                agent.tool_selection_checkboxes_fileAnalysis) && (
-                <div className="border-t border-gray-200/50 pt-3">
-                  <div className="flex flex-wrap gap-1.5 justify-center">
-                    {agent.tool_selection_checkboxes_webSearch && (
-                      <span className="text-xs bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 px-2.5 py-1 rounded-full font-medium shadow-sm">
-                        🔍 Web
-                      </span>
-                    )}
-                    {agent.tool_selection_checkboxes_codeExecution && (
-                      <span className="text-xs bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 px-2.5 py-1 rounded-full font-medium shadow-sm">
-                        💻 Code
-                      </span>
-                    )}
-                    {agent.tool_selection_checkboxes_fileAnalysis && (
-                      <span className="text-xs bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 px-2.5 py-1 rounded-full font-medium shadow-sm">
-                        📄 File
-                      </span>
-                    )}
-                  </div>
-                </div>
+        {/* Agent Description */}
+        <p className="text-xs text-gray-600 text-center mb-4 line-clamp-2 leading-relaxed">
+          {agent.description}
+        </p>
+
+        {/* Tools */}
+        {(agent.tool_selection_checkboxes_webSearch ||
+          agent.tool_selection_checkboxes_codeExecution ||
+          agent.tool_selection_checkboxes_fileAnalysis) && (
+          <div className="border-t border-gray-200/50 pt-3">
+            <div className="flex flex-wrap gap-1.5 justify-center">
+              {agent.tool_selection_checkboxes_webSearch && (
+                <span className="text-xs bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 px-2.5 py-1 rounded-full font-medium shadow-sm">
+                  🔍 Web
+                </span>
+              )}
+              {agent.tool_selection_checkboxes_codeExecution && (
+                <span className="text-xs bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 px-2.5 py-1 rounded-full font-medium shadow-sm">
+                  💻 Code
+                </span>
+              )}
+              {agent.tool_selection_checkboxes_fileAnalysis && (
+                <span className="text-xs bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 px-2.5 py-1 rounded-full font-medium shadow-sm">
+                  📄 File
+                </span>
               )}
             </div>
-          ),
-        },
-        position: {
-          x: dropdownPosition.x - 96, // Center the node (width/2)
-          y: dropdownPosition.y - 60,
-        },
-        draggable: true,
-      }
+          </div>
+        )}
+      </div>
+    ),
+  },
+  position: {
+    x: dropdownPosition.x - 96,
+    y: dropdownPosition.y - 60,
+  },
+  draggable: true,
+}
 
       // Remove the old edge and create two new edges
       setEdges((edges) => {
@@ -208,18 +227,30 @@ export default function WorkflowPage() {
       setShowAgentDropdown(false)
       setSelectedEdgeId(null)
     },
-    [edges, selectedEdgeId, dropdownPosition, setEdges, setNodes]
+    [edges, selectedEdgeId, dropdownPosition, setEdges, setNodes, removeNode]
   )
 
   // Add agent to workflow from sidebar
   const addAgentToWorkflow = useCallback(
     (agent: Agent) => {
+      const nodeId = `agent-${agent.id}-${Date.now()}`; // Create ID once
       const newNode: Node = {
-        id: `agent-${agent.id}-${Date.now()}`,
+        id: nodeId, // Use the same ID
         type: 'agentNode',
         data: {
           label: (
-            <div className="bg-gradient-to-br from-white via-slate-50 to-gray-50 border border-slate-200/60 rounded-2xl shadow-xl p-5 w-52 transition-all duration-300 hover:shadow-2xl hover:border-blue-300/40 backdrop-blur-sm">
+            <div className="relative bg-gradient-to-br from-white via-slate-50 to-gray-50 border border-slate-200/60 rounded-2xl shadow-xl p-7 w-52 transition-all duration-300 hover:shadow-2xl hover:border-blue-300/40 backdrop-blur-sm">
+              {/* Remove Button */}
+              <button
+                className="absolute right-2 top-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors duration-200"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeNode(nodeId);
+                }}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+
               {/* Agent Icon */}
               <div className="flex justify-center mb-4">
                 <div className="w-14 h-14 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
@@ -276,7 +307,7 @@ export default function WorkflowPage() {
 
       setNodes((nodes) => [...nodes, newNode])
     },
-    [setNodes]
+    [setNodes, removeNode]
   )
 
   // Action handlers
