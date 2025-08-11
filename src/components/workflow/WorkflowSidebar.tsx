@@ -1,5 +1,5 @@
 import React from 'react'
-import { Bot, Settings, Plus } from 'lucide-react'
+import { Bot, Plus } from 'lucide-react'
 
 interface Agent {
   id: string
@@ -13,74 +13,19 @@ interface Agent {
 interface WorkflowSidebarProps {
   agents: Agent[]
   loading: boolean
-  selectedSystem: string
-  onSystemChange: (systemId: string) => void
   onAgentAdd: (agent: Agent) => void
 }
 
-const workflowSystems = [
-  {
-    id: 'react-flow',
-    name: 'React Flow',
-    description: 'Professional node-based UI',
-  },
-]
+// removed workflow system selector; we always use React Flow
 
 export const WorkflowSidebar = ({
   agents,
   loading,
-  selectedSystem,
-  onSystemChange,
   onAgentAdd,
 }: WorkflowSidebarProps) => {
   return (
     <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full">
-      {/* Workflow System Selection */}
-      <div className="p-4 border-b border-gray-100">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Workflow System
-          </h3>
-        </div>
-
-        <div className="space-y-2">
-          {workflowSystems.map((system) => (
-            <div
-              key={system.id}
-              onClick={() => onSystemChange(system.id)}
-              className={`p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                selectedSystem === system.id
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Settings
-                  className={`w-4 h-4 ${
-                    selectedSystem === system.id
-                      ? 'text-blue-600'
-                      : 'text-gray-500'
-                  }`}
-                />
-                <div className="flex-1">
-                  <div
-                    className={`font-medium ${
-                      selectedSystem === system.id
-                        ? 'text-blue-900'
-                        : 'text-gray-900'
-                    }`}
-                  >
-                    {system.name}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {system.description}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* System selection removed */}
 
       {/* Agent Library */}
       <div className="flex-1 flex flex-col min-h-0">

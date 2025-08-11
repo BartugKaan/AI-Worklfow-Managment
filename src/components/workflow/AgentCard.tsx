@@ -13,7 +13,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent, onRemove }) => {
       {/* Remove Button */}
       {onRemove && (
         <button
-          className="absolute right-2 top-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors duration-200"
+          className="absolute right-2 top-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors duration-200 cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
             onRemove();

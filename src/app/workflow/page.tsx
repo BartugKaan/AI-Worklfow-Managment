@@ -77,7 +77,6 @@ export default function WorkflowPage() {
   }, [setNodes, setEdges]);
 
   // UI States
-  const [selectedSystem, setSelectedSystem] = useState('react-flow')
   const [showTestModal, setShowTestModal] = useState(false)
   const [testResult, setTestResult] = useState('')
   const [isRunningTest, setIsRunningTest] = useState(false)
@@ -264,9 +263,7 @@ export default function WorkflowPage() {
     }, 2000)
   }
 
-  const handleSystemChange = (systemId: string) => {
-    setSelectedSystem(systemId)
-  }
+  // system selection removed
 
   const handleCloseDropdown = () => {
     setShowAgentDropdown(false)
@@ -310,8 +307,6 @@ export default function WorkflowPage() {
         <WorkflowSidebar
           agents={agents}
           loading={loading}
-          selectedSystem={selectedSystem}
-          onSystemChange={handleSystemChange}
           onAgentAdd={addAgentToWorkflow}
         />
 
@@ -322,7 +317,6 @@ export default function WorkflowPage() {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          selectedSystem={selectedSystem}
           showAgentDropdown={showAgentDropdown}
           dropdownPosition={dropdownPosition}
           agents={agents}

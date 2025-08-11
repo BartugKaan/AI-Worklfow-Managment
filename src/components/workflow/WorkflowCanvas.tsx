@@ -31,7 +31,6 @@ interface WorkflowCanvasProps {
   onNodesChange: (changes: NodeChange[]) => void
   onEdgesChange: (changes: EdgeChange[]) => void
   onConnect: (connection: Connection) => void
-  selectedSystem: string
   // Agent dropdown props
   showAgentDropdown: boolean
   dropdownPosition: { x: number; y: number }
@@ -46,7 +45,6 @@ export const WorkflowCanvas = ({
   onNodesChange,
   onEdgesChange,
   onConnect,
-  selectedSystem,
   showAgentDropdown,
   agents,
   onAgentSelection,
@@ -55,7 +53,7 @@ export const WorkflowCanvas = ({
 
   return (
     <div className="flex-1 relative bg-gray-50">
-      {selectedSystem === 'react-flow' ? (
+      {/* Always render React Flow */}
         <div className="h-full w-full relative">
 
 
@@ -195,22 +193,7 @@ export const WorkflowCanvas = ({
             </>
           )}
         </div>
-      ) : (
-        // Other workflow systems placeholder
-        <div className="h-full w-full bg-gradient-to-br from-gray-50 to-slate-100 flex items-center justify-center">
-          <div className="text-center">
-            <div className="mb-4 p-6 bg-gray-200 rounded-full w-24 h-24 mx-auto flex items-center justify-center">
-              <Settings className="w-12 h-12 text-gray-500" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Coming Soon
-            </h3>
-            <p className="text-gray-600">
-              This workflow system will be available soon
-            </p>
-          </div>
-        </div>
-      )}
+      
     </div>
   )
 }
