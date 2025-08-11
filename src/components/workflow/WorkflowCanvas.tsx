@@ -10,6 +10,7 @@ import {
   NodeChange,
   EdgeChange,
   Connection,
+  SelectionMode,
 } from '@xyflow/react'
 import { nodeTypes } from './WorkflowNodes'
 import { edgeTypes } from './WorkflowEdges'
@@ -78,7 +79,7 @@ export const WorkflowCanvas = ({
             zoomOnDoubleClick={true}
             selectionOnDrag
             panOnDrag={[1, 2]}
-            selectionMode="partial"
+            selectionMode={SelectionMode.Partial}
           >
             {/* Enhanced Controls */}
             <Controls

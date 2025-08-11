@@ -10,22 +10,26 @@ import {
   Node,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { Bot } from 'lucide-react'
-import { useAgents } from '@/hooks/useAgents'
+
+import { useAgents, type Agent as AppAgent } from '@/hooks/useAgents'
 import { WorkflowHeader } from '@/components/workflow/WorkflowHeader'
 import { WorkflowSidebar } from '@/components/workflow/WorkflowSidebar'
 import { WorkflowCanvas } from '@/components/workflow/WorkflowCanvas'
-import { Trash2 } from 'lucide-react'
+import { WorkflowRightSidebar } from '@/components/workflow/WorkflowRightSidebar'
+import { WorkflowSaveModal } from '@/components/workflow/WorkflowSaveModal'
+import { useWorkflows } from '@/hooks/useWorkflows'
+import type { SavedWorkflow, WorkflowAgentInfo } from '@/types/workflow'
 
-// Agent interface
-interface Agent {
-  id: string
-  name: string
-  description: string
-  tool_selection_checkboxes_webSearch: boolean
-  tool_selection_checkboxes_codeExecution: boolean
-  tool_selection_checkboxes_fileAnalysis: boolean
-}
+// Local view model for agent info on nodes
+type Agent = Pick<
+  AppAgent,
+  | 'id'
+  | 'name'
+  | 'description'
+  | 'tool_selection_checkboxes_webSearch'
+  | 'tool_selection_checkboxes_codeExecution'
+  | 'tool_selection_checkboxes_fileAnalysis'
+>
 
 const X_POSITION_RANGE = 400
 const Y_POSITION_RANGE = 200
@@ -62,6 +66,7 @@ const initialEdges: Edge[] = [
 
 export default function WorkflowPage() {
   const { agents, loading } = useAgents()
+  const { savedWorkflows, saveWorkflow, deleteWorkflow } = useWorkflows()
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
 
@@ -76,6 +81,10 @@ export default function WorkflowPage() {
   const [showTestModal, setShowTestModal] = useState(false)
   const [testResult, setTestResult] = useState('')
   const [isRunningTest, setIsRunningTest] = useState(false)
+  
+  // Workflow save modal states
+  const [showSaveModal, setShowSaveModal] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
   // Edge interaction states
   const [showAgentDropdown, setShowAgentDropdown] = useState(false)
@@ -128,77 +137,33 @@ export default function WorkflowPage() {
       if (!edge) return
 
       // Create a new agent node with modern styling
-     const newAgentNode: Node = {
-  id: `agent-${agent.id}-${Date.now()}`,
-  type: 'agentNode',
-  data: {
-    label: (
-      <div className="relative bg-gradient-to-br from-white via-slate-50 to-gray-50 border border-slate-200/60 rounded-2xl shadow-xl p-7 w-52 transition-all duration-300 hover:shadow-2xl hover:border-blue-300/40 backdrop-blur-sm">
-        {/* Remove Button */}
-        <button
-          className="absolute right-2 top-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors duration-200"
-          onClick={(e) => {
-            e.stopPropagation();
-            setNodes((nodes) => nodes.filter(n => n.id !== `agent-${agent.id}-${Date.now()}`));
-            setEdges((edges) => edges.filter(e => e.source !== `agent-${agent.id}-${Date.now()}` && e.target !== `agent-${agent.id}-${Date.now()}`));
-          }}
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
+      const nodeId = `agent-${agent.id}-${Date.now()}`
+      const agentInfo: WorkflowAgentInfo = {
+        id: agent.id,
+        name: agent.name,
+        description: agent.description,
+        tool_selection_checkboxes_webSearch:
+          agent.tool_selection_checkboxes_webSearch,
+        tool_selection_checkboxes_codeExecution:
+          agent.tool_selection_checkboxes_codeExecution,
+        tool_selection_checkboxes_fileAnalysis:
+          agent.tool_selection_checkboxes_fileAnalysis,
+      }
 
-        {/* Agent Icon */}
-        <div className="flex justify-center mb-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
-            <Bot className="w-7 h-7 text-white" />
-          </div>
-        </div>
-
-        {/* Agent Name */}
-        <div className="text-center mb-3">
-          <h4 className="font-bold text-gray-900 text-base truncate tracking-wide">
-            {agent.name}
-          </h4>
-          <div className="w-8 h-0.5 bg-gradient-to-r from-blue-500 to-blue-600 mx-auto mt-2 rounded-full"></div>
-        </div>
-
-        {/* Agent Description */}
-        <p className="text-xs text-gray-600 text-center mb-4 line-clamp-2 leading-relaxed">
-          {agent.description}
-        </p>
-
-        {/* Tools */}
-        {(agent.tool_selection_checkboxes_webSearch ||
-          agent.tool_selection_checkboxes_codeExecution ||
-          agent.tool_selection_checkboxes_fileAnalysis) && (
-          <div className="border-t border-gray-200/50 pt-3">
-            <div className="flex flex-wrap gap-1.5 justify-center">
-              {agent.tool_selection_checkboxes_webSearch && (
-                <span className="text-xs bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 px-2.5 py-1 rounded-full font-medium shadow-sm">
-                  🔍 Web
-                </span>
-              )}
-              {agent.tool_selection_checkboxes_codeExecution && (
-                <span className="text-xs bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 px-2.5 py-1 rounded-full font-medium shadow-sm">
-                  💻 Code
-                </span>
-              )}
-              {agent.tool_selection_checkboxes_fileAnalysis && (
-                <span className="text-xs bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 px-2.5 py-1 rounded-full font-medium shadow-sm">
-                  📄 File
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    ),
-  },
-  position: {
-    x: dropdownPosition.x - 96,
-    y: dropdownPosition.y - 60,
-  },
-  draggable: true,
-}
+      const newAgentNode: Node = {
+        id: nodeId,
+        type: 'agentNode',
+        data: {
+          agentInfo,
+          label: null,
+          onRemove: () => removeNode(nodeId),
+        },
+        position: {
+          x: dropdownPosition.x - 96, // Center the node (width/2)
+          y: dropdownPosition.y - 60,
+        },
+        draggable: true,
+      }
 
       // Remove the old edge and create two new edges
       setEdges((edges) => {
@@ -234,69 +199,25 @@ export default function WorkflowPage() {
   const addAgentToWorkflow = useCallback(
     (agent: Agent) => {
       const nodeId = `agent-${agent.id}-${Date.now()}`; // Create ID once
+      const agentInfo: WorkflowAgentInfo = {
+        id: agent.id,
+        name: agent.name,
+        description: agent.description,
+        tool_selection_checkboxes_webSearch:
+          agent.tool_selection_checkboxes_webSearch,
+        tool_selection_checkboxes_codeExecution:
+          agent.tool_selection_checkboxes_codeExecution,
+        tool_selection_checkboxes_fileAnalysis:
+          agent.tool_selection_checkboxes_fileAnalysis,
+      }
+
       const newNode: Node = {
         id: nodeId, // Use the same ID
         type: 'agentNode',
         data: {
-          label: (
-            <div className="relative bg-gradient-to-br from-white via-slate-50 to-gray-50 border border-slate-200/60 rounded-2xl shadow-xl p-7 w-52 transition-all duration-300 hover:shadow-2xl hover:border-blue-300/40 backdrop-blur-sm">
-              {/* Remove Button */}
-              <button
-                className="absolute right-2 top-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors duration-200"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeNode(nodeId);
-                }}
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-
-              {/* Agent Icon */}
-              <div className="flex justify-center mb-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
-                  <Bot className="w-7 h-7 text-white" />
-                </div>
-              </div>
-
-              {/* Agent Name */}
-              <div className="text-center mb-3">
-                <h4 className="font-bold text-gray-900 text-base truncate tracking-wide">
-                  {agent.name}
-                </h4>
-                <div className="w-8 h-0.5 bg-gradient-to-r from-blue-500 to-blue-600 mx-auto mt-2 rounded-full"></div>
-              </div>
-
-              {/* Agent Description */}
-              <p className="text-xs text-gray-600 text-center mb-4 line-clamp-2 leading-relaxed">
-                {agent.description}
-              </p>
-
-              {/* Tools */}
-              {(agent.tool_selection_checkboxes_webSearch ||
-                agent.tool_selection_checkboxes_codeExecution ||
-                agent.tool_selection_checkboxes_fileAnalysis) && (
-                <div className="border-t border-gray-200/50 pt-3">
-                  <div className="flex flex-wrap gap-1.5 justify-center">
-                    {agent.tool_selection_checkboxes_webSearch && (
-                      <span className="text-xs bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 px-2.5 py-1 rounded-full font-medium shadow-sm">
-                        🔍 Web
-                      </span>
-                    )}
-                    {agent.tool_selection_checkboxes_codeExecution && (
-                      <span className="text-xs bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 px-2.5 py-1 rounded-full font-medium shadow-sm">
-                        💻 Code
-                      </span>
-                    )}
-                    {agent.tool_selection_checkboxes_fileAnalysis && (
-                      <span className="text-xs bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 px-2.5 py-1 rounded-full font-medium shadow-sm">
-                        📄 File
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          ),
+          agentInfo,
+          label: null,
+          onRemove: () => removeNode(nodeId),
         },
         position: {
           x: Math.random() * X_POSITION_RANGE + X_POSITION_OFFSET,
@@ -312,8 +233,26 @@ export default function WorkflowPage() {
 
   // Action handlers
   const handleSave = () => {
-    console.log('Saving workflow...', { nodes, edges })
-    // TODO: Implement save functionality
+    setShowSaveModal(true)
+  }
+
+  const handleSaveWorkflow = async (name: string, description?: string) => {
+    setIsSaving(true)
+    try {
+      // Simulate saving delay
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      const savedWorkflow = saveWorkflow(name, nodes, edges, description)
+      console.log('Workflow saved:', savedWorkflow)
+      
+      // Optional: Show success message
+      // You could add a toast notification here
+    } catch (error) {
+      console.error('Error saving workflow:', error)
+      // Handle error - could show error toast
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleTest = () => {
@@ -332,6 +271,28 @@ export default function WorkflowPage() {
   const handleCloseDropdown = () => {
     setShowAgentDropdown(false)
     setSelectedEdgeId(null)
+  }
+
+  // Right sidebar handlers  
+  const handleWorkflowLoad = (workflow: SavedWorkflow) => {
+    // For now, just set the workflow directly
+    // The deserialization will be handled in the useWorkflows hook
+    setNodes(workflow.nodes || [])
+    setEdges(workflow.edges || [])
+    console.log('Workflow loaded:', workflow)
+  }
+
+  const handleWorkflowDelete = (workflowId: string) => {
+    if (window.confirm('Are you sure you want to delete this workflow?')) {
+      deleteWorkflow(workflowId)
+      console.log('Workflow deleted:', workflowId)
+    }
+  }
+
+  const handleWorkflowPreview = (workflow: SavedWorkflow) => {
+    // For now, just load the workflow
+    // In the future, this could open a preview modal
+    handleWorkflowLoad(workflow)
   }
 
   return (
@@ -368,6 +329,14 @@ export default function WorkflowPage() {
           onAgentSelection={handleAgentSelection}
           onCloseDropdown={handleCloseDropdown}
         />
+
+        {/* Right Sidebar - Saved Workflows */}
+        <WorkflowRightSidebar
+          savedWorkflows={savedWorkflows}
+          onWorkflowLoad={handleWorkflowLoad}
+          onWorkflowDelete={handleWorkflowDelete}
+          onWorkflowPreview={handleWorkflowPreview}
+        />
       </div>
 
       {/* Test Modal */}
@@ -394,6 +363,14 @@ export default function WorkflowPage() {
           </div>
         </div>
       )}
+
+      {/* Workflow Save Modal */}
+      <WorkflowSaveModal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        onSave={handleSaveWorkflow}
+        isLoading={isSaving}
+      />
     </div>
   )
 }

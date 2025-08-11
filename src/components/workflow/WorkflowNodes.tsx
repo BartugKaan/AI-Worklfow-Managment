@@ -1,6 +1,8 @@
 import React from 'react'
 import { Handle, Position } from '@xyflow/react'
 import { Play, Square } from 'lucide-react'
+import type { WorkflowAgentInfo } from '@/types/workflow'
+import { AgentCard } from './AgentCard'
 
 // Custom Node Components with Enhanced Connection Handles
 export const StartNode = () => {
@@ -53,11 +55,21 @@ export const EndNode = () => {
   )
 }
 
-export const AgentNode = ({ data }: { data: { label: React.ReactNode } }) => {
+type AgentNodeData = {
+  label?: React.ReactNode | null
+  agentInfo?: WorkflowAgentInfo
+  onRemove?: () => void
+}
+
+export const AgentNode = ({ data }: { data: AgentNodeData }) => {
   return (
     <div className="relative group">
       <div className="transition-all duration-300 group-hover:shadow-2xl group-hover:scale-105">
-        {data.label}
+        {data.label && React.isValidElement(data.label)
+          ? data.label
+          : data.agentInfo
+          ? <AgentCard agent={data.agentInfo} onRemove={data.onRemove} />
+          : null}
       </div>
       {/* Modern Input Handle */}
       <Handle
