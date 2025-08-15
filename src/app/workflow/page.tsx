@@ -12,14 +12,14 @@ import {
 import '@xyflow/react/dist/style.css'
 
 import { useAgents, type Agent as AppAgent } from '@/hooks/useAgents'
-import { WorkflowHeader } from '@/components/workflow/WorkflowHeader'
-import { WorkflowSidebar } from '@/components/workflow/WorkflowSidebar'
+import { Navbar } from '@/components/Navbar'
 import { WorkflowCanvas } from '@/components/workflow/WorkflowCanvas'
-import { WorkflowRightSidebar } from '@/components/workflow/WorkflowRightSidebar'
 import { WorkflowSaveModal } from '@/components/workflow/WorkflowSaveModal'
 import { WorkflowExecutionModal } from '@/components/workflow/WorkflowExecutionModal'
 import { useWorkflows } from '@/hooks/useWorkflows'
 import { WorkflowApiService } from '@/lib/workflow-api'
+import { Button } from '@/components/ui/button'
+import { Play, Save, FolderOpen, Bot, Plus } from 'lucide-react'
 import type { SavedWorkflow, WorkflowAgentInfo, WorkflowExecutionResult, WorkflowData } from '@/types/workflow'
 
 // Local view model for agent info on nodes
@@ -342,43 +342,156 @@ export default function WorkflowPage() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      {/* Header */}
-      <WorkflowHeader
-        onSave={handleSave}
-        onTest={handleTest}
-        isRunningTest={isExecuting}
-      />
+      <Navbar />
+      
+      {/* Workflow Header */}
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-3 shrink-0">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Workflow Builder</h1>
+            <p className="text-sm text-gray-600">Design and execute multi-agent workflows</p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={handleSave}
+              className="flex items-center gap-2"
+            >
+              <Save className="w-4 h-4" />
+              Save Workflow
+            </Button>
+            
+            <Button
+              onClick={handleTest}
+              disabled={isExecuting}
+              className="flex items-center gap-2 bg-black hover:bg-gray-800"
+            >
+              <Play className="w-4 h-4" />
+              {isExecuting ? 'Running...' : 'Test Workflow'}
+            </Button>
+          </div>
+        </div>
+      </div>
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar */}
-        <WorkflowSidebar
-          agents={agents}
-          loading={loading}
-          onAgentAdd={addAgentToWorkflow}
-        />
+        {/* Left Panel - Agent Library */}
+        <div className="w-64 bg-white border-r border-gray-200 flex flex-col shrink-0">
+          <div className="p-3 border-b border-gray-200">
+            <h3 className="font-semibold text-gray-900 text-sm mb-1">Agent Library</h3>
+            <p className="text-xs text-gray-600">Click agents to add to workflow</p>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-3">
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-black mx-auto mb-2"></div>
+                <p className="text-xs text-gray-600">Loading agents...</p>
+              </div>
+            ) : agents.length === 0 ? (
+              <div className="text-center py-8">
+                <Bot className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-xs text-gray-600 mb-3">No agents available</p>
+                <Button size="sm" className="bg-black hover:bg-gray-800 text-xs">
+                  <Plus className="w-3 h-3 mr-1" />
+                  Create Agent
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {agents.map((agent) => (
+                  <div
+                    key={agent.id}
+                    onClick={() => addAgentToWorkflow(agent)}
+                    className="p-2 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <Bot className="w-3 h-3 text-gray-600" />
+                      <span className="font-medium text-xs text-gray-900 truncate">{agent.name}</span>
+                      {agent.isActive && (
+                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-600 line-clamp-2">{agent.description}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
-        {/* Canvas */}
-        <WorkflowCanvas
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          showAgentDropdown={showAgentDropdown}
-          dropdownPosition={dropdownPosition}
-          agents={agents}
-          onAgentSelection={handleAgentSelection}
-          onCloseDropdown={handleCloseDropdown}
-        />
+        {/* Canvas Area */}
+        <div className="flex-1 relative h-full">
+          <div className="absolute inset-0">
+            <WorkflowCanvas
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              showAgentDropdown={showAgentDropdown}
+              dropdownPosition={dropdownPosition}
+              agents={agents}
+              onAgentSelection={handleAgentSelection}
+              onCloseDropdown={handleCloseDropdown}
+            />
+          </div>
+        </div>
 
-        {/* Right Sidebar - Saved Workflows */}
-        <WorkflowRightSidebar
-          savedWorkflows={savedWorkflows}
-          onWorkflowLoad={handleWorkflowLoad}
-          onWorkflowDelete={handleWorkflowDelete}
-          onWorkflowPreview={handleWorkflowPreview}
-        />
+        {/* Right Panel - Saved Workflows */}
+        <div className="w-64 bg-white border-l border-gray-200 flex flex-col shrink-0">
+          <div className="p-3 border-b border-gray-200">
+            <h3 className="font-semibold text-gray-900 text-sm mb-1">Saved Workflows</h3>
+            <p className="text-xs text-gray-600">Load or manage workflows</p>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-3">
+            {savedWorkflows.length === 0 ? (
+              <div className="text-center py-8">
+                <FolderOpen className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-xs text-gray-600">No saved workflows</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {savedWorkflows.map((workflow) => (
+                  <div key={workflow.id} className="p-2 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-start justify-between mb-1">
+                      <h4 className="font-medium text-xs text-gray-900 truncate">{workflow.name}</h4>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleWorkflowDelete(workflow.id)}
+                        className="text-red-600 hover:text-red-700 h-4 w-4 p-0 text-xs"
+                      >
+                        ×
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">{workflow.description}</p>
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleWorkflowLoad(workflow)}
+                        className="flex-1 text-xs h-6"
+                      >
+                        Load
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleWorkflowPreview(workflow)}
+                        className="flex-1 text-xs h-6"
+                      >
+                        Preview
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Workflow Execution Modal */}

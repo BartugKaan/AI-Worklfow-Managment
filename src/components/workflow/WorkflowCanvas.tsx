@@ -52,7 +52,7 @@ export const WorkflowCanvas = ({
 }: WorkflowCanvasProps) => {
 
   return (
-    <div className="flex-1 relative bg-gray-50">
+    <div className="w-full h-full relative bg-gray-50">
       {/* Always render React Flow */}
         <div className="h-full w-full relative">
 
