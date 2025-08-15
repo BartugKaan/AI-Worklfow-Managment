@@ -17,8 +17,10 @@ import { WorkflowSidebar } from '@/components/workflow/WorkflowSidebar'
 import { WorkflowCanvas } from '@/components/workflow/WorkflowCanvas'
 import { WorkflowRightSidebar } from '@/components/workflow/WorkflowRightSidebar'
 import { WorkflowSaveModal } from '@/components/workflow/WorkflowSaveModal'
+import { WorkflowExecutionModal } from '@/components/workflow/WorkflowExecutionModal'
 import { useWorkflows } from '@/hooks/useWorkflows'
-import type { SavedWorkflow, WorkflowAgentInfo } from '@/types/workflow'
+import { WorkflowApiService } from '@/lib/workflow-api'
+import type { SavedWorkflow, WorkflowAgentInfo, WorkflowExecutionResult, WorkflowData } from '@/types/workflow'
 
 // Local view model for agent info on nodes
 type Agent = Pick<
@@ -41,14 +43,14 @@ const initialNodes: Node[] = [
   {
     id: 'start',
     type: 'startNode',
-    data: {},
+    data: { label: 'START', agentId: 'START' },
     position: { x: 200, y: 300 },
     draggable: true,
   },
   {
     id: 'end',
     type: 'endNode',
-    data: {},
+    data: { label: 'END', agentId: 'END' },
     position: { x: 800, y: 300 },
     draggable: true,
   },
@@ -77,9 +79,11 @@ export default function WorkflowPage() {
   }, [setNodes, setEdges]);
 
   // UI States
-  const [showTestModal, setShowTestModal] = useState(false)
-  const [testResult, setTestResult] = useState('')
-  const [isRunningTest, setIsRunningTest] = useState(false)
+  const [showExecutionModal, setShowExecutionModal] = useState(false)
+  const [isExecuting, setIsExecuting] = useState(false)
+  const [executionResult, setExecutionResult] = useState<WorkflowExecutionResult | null>(null)
+  const [executionError, setExecutionError] = useState<string | null>(null)
+  const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null)
   
   // Workflow save modal states
   const [showSaveModal, setShowSaveModal] = useState(false)
@@ -154,7 +158,8 @@ export default function WorkflowPage() {
         type: 'agentNode',
         data: {
           agentInfo,
-          label: null,
+          label: agent.name,
+          agentId: agent.id,
           onRemove: () => removeNode(nodeId),
         },
         position: {
@@ -215,7 +220,8 @@ export default function WorkflowPage() {
         type: 'agentNode',
         data: {
           agentInfo,
-          label: null,
+          label: agent.name,
+          agentId: agent.id,
           onRemove: () => removeNode(nodeId),
         },
         position: {
@@ -244,23 +250,69 @@ export default function WorkflowPage() {
       const savedWorkflow = saveWorkflow(name, nodes, edges, description)
       console.log('Workflow saved:', savedWorkflow)
       
-      // Optional: Show success message
-      // You could add a toast notification here
     } catch (error) {
       console.error('Error saving workflow:', error)
-      // Handle error - could show error toast
     } finally {
       setIsSaving(false)
     }
   }
 
-  const handleTest = () => {
-    setShowTestModal(true)
-    setIsRunningTest(true)
-    setTimeout(() => {
-      setIsRunningTest(false)
-      setTestResult('Workflow test completed successfully!')
-    }, 2000)
+  const handleTest = async () => {
+    // First save the workflow to get an ID if we don't have one
+    if (!currentWorkflowId) {
+      try {
+        const workflowData: WorkflowData = {
+          name: `Workflow_${Date.now()}`,
+          nodes,
+          edges,
+        }
+        const savedWorkflow = await WorkflowApiService.saveWorkflow(workflowData)
+        setCurrentWorkflowId(savedWorkflow.id || null)
+      } catch (error) {
+        console.error('Error saving workflow before execution:', error)
+        setExecutionError('Failed to save workflow before execution')
+        setShowExecutionModal(true)
+        return
+      }
+    }
+    
+    // Reset previous results and show execution modal
+    setExecutionResult(null)
+    setExecutionError(null)
+    setShowExecutionModal(true)
+  }
+
+  const handleExecuteWorkflow = async (inputText: string) => {
+    if (!currentWorkflowId) {
+      setExecutionError('No workflow ID available for execution')
+      return
+    }
+
+    setIsExecuting(true)
+    setExecutionError(null)
+    
+    try {
+      // Create workflow data for execution
+      const workflowData: WorkflowData = {
+        id: currentWorkflowId,
+        name: `Workflow_${Date.now()}`,
+        nodes,
+        edges,
+      }
+      
+      // Use the new sync method to ensure agents exist in backend before execution
+      const result = await WorkflowApiService.executeWithAgentSync(
+        workflowData,
+        inputText,
+        agents
+      )
+      setExecutionResult(result)
+    } catch (error) {
+      console.error('Error executing workflow:', error)
+      setExecutionError(error instanceof Error ? error.message : 'Failed to execute workflow')
+    } finally {
+      setIsExecuting(false)
+    }
   }
 
   // system selection removed
@@ -272,8 +324,6 @@ export default function WorkflowPage() {
 
   // Right sidebar handlers  
   const handleWorkflowLoad = (workflow: SavedWorkflow) => {
-    // For now, just set the workflow directly
-    // The deserialization will be handled in the useWorkflows hook
     setNodes(workflow.nodes || [])
     setEdges(workflow.edges || [])
     console.log('Workflow loaded:', workflow)
@@ -287,8 +337,6 @@ export default function WorkflowPage() {
   }
 
   const handleWorkflowPreview = (workflow: SavedWorkflow) => {
-    // For now, just load the workflow
-    // In the future, this could open a preview modal
     handleWorkflowLoad(workflow)
   }
 
@@ -298,7 +346,7 @@ export default function WorkflowPage() {
       <WorkflowHeader
         onSave={handleSave}
         onTest={handleTest}
-        isRunningTest={isRunningTest}
+        isRunningTest={isExecuting}
       />
 
       {/* Main Content */}
@@ -333,30 +381,19 @@ export default function WorkflowPage() {
         />
       </div>
 
-      {/* Test Modal */}
-      {showTestModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Test Workflow</h3>
-            {isRunningTest ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p>Running workflow test...</p>
-              </div>
-            ) : (
-              <div>
-                <p className="text-green-600 mb-4">{testResult}</p>
-                <button
-                  onClick={() => setShowTestModal(false)}
-                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 cursor-pointer hover:shadow-lg transition-all duration-200"
-                >
-                  Close
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Workflow Execution Modal */}
+      <WorkflowExecutionModal
+        isOpen={showExecutionModal}
+        onClose={() => {
+          setShowExecutionModal(false)
+          setExecutionResult(null)
+          setExecutionError(null)
+        }}
+        onExecute={handleExecuteWorkflow}
+        isExecuting={isExecuting}
+        executionResult={executionResult}
+        error={executionError}
+      />
 
       {/* Workflow Save Modal */}
       <WorkflowSaveModal
