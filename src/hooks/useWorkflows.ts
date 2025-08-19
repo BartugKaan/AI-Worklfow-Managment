@@ -11,13 +11,12 @@ export function useWorkflows() {
   const [savedWorkflows, setSavedWorkflows] = useState<SavedWorkflow[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Load workflows from localStorage on mount
+  // Load workflows from local storage on mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
       if (stored) {
         const workflows = JSON.parse(stored)
-        // Convert date strings back to Date objects and sanitize nodes
         const workflowsWithDates = workflows.map((workflow: any) => ({
           ...workflow,
           createdAt: workflow.createdAt ? new Date(workflow.createdAt) : new Date(),
@@ -25,7 +24,6 @@ export function useWorkflows() {
           nodes: Array.isArray(workflow.nodes)
             ? workflow.nodes.map((node: any) => {
                 const data = node?.data || {}
-                // If label is a plain object (from JSON of a React element), drop it
                 const nextLabel =
                   data && typeof data.label !== 'undefined'
                     ? (React.isValidElement?.(data.label) ? data.label : null)
@@ -50,7 +48,7 @@ export function useWorkflows() {
     }
   }, [])
 
-  // Save workflows to localStorage whenever savedWorkflows changes
+  // Save workflows to local storage
   const saveToStorage = useCallback((workflows: SavedWorkflow[]) => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(workflows))
@@ -80,7 +78,6 @@ export function useWorkflows() {
           ...node,
           data: {
             ...data,
-            // keep agentInfo as-is if present; always null out label to ensure serializable
             agentInfo: data.agentInfo || undefined,
             label: null,
           },

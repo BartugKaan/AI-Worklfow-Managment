@@ -46,8 +46,7 @@ function AddAgentPage() {
       },
     }))
   }
-
-  // Generate agent configuration using Python backend
+// Generate agent configuration with backend
   const handleGenerateAgent = async () => {
     if (!creationPrompt.trim()) {
       alert('Please provide a description for your agent')
