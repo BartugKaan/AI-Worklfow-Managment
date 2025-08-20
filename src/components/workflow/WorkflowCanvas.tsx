@@ -14,7 +14,7 @@ import {
 } from '@xyflow/react'
 import { nodeTypes } from './WorkflowNodes'
 import { edgeTypes } from './WorkflowEdges'
-import { Bot, Settings } from 'lucide-react'
+import { Bot, Globe, Code, FileText, Settings } from 'lucide-react'
 
 interface Agent {
   id: string
@@ -23,6 +23,15 @@ interface Agent {
   tool_selection_checkboxes_webSearch: boolean
   tool_selection_checkboxes_codeExecution: boolean
   tool_selection_checkboxes_fileAnalysis: boolean
+  isActive?: boolean
+}
+
+interface Tool {
+  id: string
+  name: string
+  description: string
+  icon: 'web-search' | 'code-execution' | 'file-analysis'
+  color: string
 }
 
 interface WorkflowCanvasProps {
@@ -35,7 +44,9 @@ interface WorkflowCanvasProps {
   showAgentDropdown: boolean
   dropdownPosition: { x: number; y: number }
   agents: Agent[]
+  tools: Tool[]
   onAgentSelection: (agent: Agent) => void
+  onToolSelection: (tool: Tool) => void
   onCloseDropdown: () => void
 }
 
@@ -47,7 +58,9 @@ export const WorkflowCanvas = ({
   onConnect,
   showAgentDropdown,
   agents,
+  tools,
   onAgentSelection,
+  onToolSelection,
   onCloseDropdown,
 }: WorkflowCanvasProps) => {
 
@@ -112,76 +125,99 @@ export const WorkflowCanvas = ({
             />
           </ReactFlow>
 
-          {/* Agent Selection Dropdown for Edge */}
+          {/* Agent & Tool Selection Dropdown for Edge */}
           {showAgentDropdown && (
             <>
               <div
-                className="absolute z-50 bg-white rounded-xl shadow-2xl border border-gray-200 p-3 max-h-72 overflow-y-auto"
+                className="absolute z-50 bg-white rounded-xl shadow-2xl border border-gray-200 p-4 max-h-80 overflow-y-auto"
                 style={{
                   left: '50%',
                   top: '50%',
                   transform: 'translate(-50%, -50%)',
-                  minWidth: '240px',
+                  minWidth: '280px',
                 }}
               >
-                <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
-                  <Bot className="w-4 h-4 text-blue-600" />
+                <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100">
+                  <Settings className="w-4 h-4 text-gray-600" />
                   <span className="text-sm font-semibold text-gray-900">
-                    Select Agent to Add
+                    Add to Workflow
                   </span>
                 </div>
 
-                <div className="space-y-2">
-                  {agents.map((agent) => (
-                    <button
-                      key={agent.id}
-                      className="w-full text-left p-3 text-sm hover:bg-blue-50 rounded-lg flex items-center gap-3 transition-all duration-200 group border border-transparent hover:border-blue-200 cursor-pointer hover:shadow-md"
-                      onClick={() => onAgentSelection(agent)}
-                    >
-                      <div className="w-8 h-8 bg-blue-500 group-hover:bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-200">
-                        <Bot className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-gray-900 truncate group-hover:text-blue-900">
-                          {agent.name}
+                {/* Tools Section */}
+                <div className="mb-4">
+                  <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-2">Tools</h4>
+                  <div className="space-y-2">
+                    {tools.map((tool) => (
+                      <button
+                        key={tool.id}
+                        className="w-full text-left p-2.5 text-sm hover:bg-orange-50 rounded-lg flex items-center gap-3 transition-all duration-200 group border border-transparent hover:border-orange-200 cursor-pointer"
+                        onClick={() => onToolSelection(tool)}
+                      >
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${
+                          tool.icon === 'web-search' ? 'bg-blue-500 group-hover:bg-blue-600' :
+                          tool.icon === 'code-execution' ? 'bg-green-500 group-hover:bg-green-600' : 
+                          'bg-purple-500 group-hover:bg-purple-600'
+                        }`}>
+                          {tool.icon === 'web-search' && <Globe className="w-3.5 h-3.5 text-white" />}
+                          {tool.icon === 'code-execution' && <Code className="w-3.5 h-3.5 text-white" />}
+                          {tool.icon === 'file-analysis' && <FileText className="w-3.5 h-3.5 text-white" />}
                         </div>
-                        <div className="text-xs text-gray-500 truncate mt-1">
-                          {agent.description}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-900 truncate group-hover:text-orange-800">
+                            {tool.name}
+                          </div>
+                          <div className="text-xs text-gray-500 truncate mt-0.5">
+                            {tool.description}
+                          </div>
                         </div>
-                        {/* Quick tool indicators */}
-                        <div className="flex gap-1 mt-2">
-                          {agent.tool_selection_checkboxes_webSearch && (
-                            <div
-                              className="w-2 h-2 bg-blue-400 rounded-full"
-                              title="Web Search"
-                            />
-                          )}
-                          {agent.tool_selection_checkboxes_codeExecution && (
-                            <div
-                              className="w-2 h-2 bg-green-400 rounded-full"
-                              title="Code Execution"
-                            />
-                          )}
-                          {agent.tool_selection_checkboxes_fileAnalysis && (
-                            <div
-                              className="w-2 h-2 bg-purple-400 rounded-full"
-                              title="File Analysis"
-                            />
-                          )}
-                        </div>
-                      </div>
-                    </button>
-                  ))}
+                        <span className="text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-medium">
+                          Tool
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-                  {agents.length === 0 && (
-                    <div className="text-center py-6 text-gray-500">
-                      <Bot className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                      <div className="text-sm">No agents available</div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        Create agents first
+                {/* Agents Section */}
+                <div>
+                  <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-2">Agents</h4>
+                  <div className="space-y-2">
+                    {agents.map((agent) => (
+                      <button
+                        key={agent.id}
+                        className="w-full text-left p-2.5 text-sm hover:bg-blue-50 rounded-lg flex items-center gap-3 transition-all duration-200 group border border-transparent hover:border-blue-200 cursor-pointer"
+                        onClick={() => onAgentSelection(agent)}
+                      >
+                        <div className="w-7 h-7 bg-blue-500 group-hover:bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-200">
+                          <Bot className="w-3.5 h-3.5 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-900 truncate group-hover:text-blue-900">
+                            {agent.name}
+                          </div>
+                          <div className="text-xs text-gray-500 truncate mt-0.5">
+                            {agent.description}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {agent.isActive && (
+                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                          )}
+                          <span className="text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full font-medium">
+                            Agent
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+
+                    {agents.length === 0 && (
+                      <div className="text-center py-4 text-gray-500">
+                        <Bot className="w-6 h-6 text-gray-300 mx-auto mb-1" />
+                        <div className="text-xs">No agents available</div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
 

@@ -19,8 +19,9 @@ import { WorkflowExecutionModal } from '@/components/workflow/WorkflowExecutionM
 import { useWorkflows } from '@/hooks/useWorkflows'
 import { WorkflowApiService } from '@/lib/workflow-api'
 import { Button } from '@/components/ui/button'
-import { Play, Save, FolderOpen, Bot, Plus } from 'lucide-react'
+import { Play, Save, FolderOpen, Bot, Plus, Globe, Code, FileText, Wrench } from 'lucide-react'
 import type { SavedWorkflow, WorkflowAgentInfo, WorkflowExecutionResult, WorkflowData } from '@/types/workflow'
+import type { ToolInfo } from '@/components/workflow/ToolCard'
 
 // Local view model for agent info on nodes
 type Agent = Pick<
@@ -37,6 +38,31 @@ const X_POSITION_RANGE = 400
 const Y_POSITION_RANGE = 200
 const X_POSITION_OFFSET = 250
 const Y_POSITION_OFFSET = 150
+
+// Available tools for workflow
+const availableTools: ToolInfo[] = [
+  {
+    id: 'web-search',
+    name: 'Web Search',
+    description: 'Search the web for information and retrieve relevant data',
+    icon: 'web-search',
+    color: 'blue'
+  },
+  {
+    id: 'code-execution',
+    name: 'Code Execution',
+    description: 'Execute code snippets and programming tasks',
+    icon: 'code-execution',
+    color: 'green'
+  },
+  {
+    id: 'file-analysis',
+    name: 'File Analysis',
+    description: 'Analyze and process various file formats',
+    icon: 'file-analysis',
+    color: 'purple'
+  }
+]
 
 // Initial nodes and edges
 const initialNodes: Node[] = [
@@ -153,7 +179,7 @@ export default function WorkflowPage() {
           agent.tool_selection_checkboxes_fileAnalysis,
       }
 
-      const newAgentNode: Node = {
+      const newNode: Node = {
         id: nodeId,
         type: 'agentNode',
         data: {
@@ -162,41 +188,85 @@ export default function WorkflowPage() {
           agentId: agent.id,
           onRemove: () => removeNode(nodeId),
         },
-        position: {
-          x: dropdownPosition.x - 96, // Center the node (width/2)
-          y: dropdownPosition.y - 60,
-        },
+        position: { x: 400, y: 200 },
         draggable: true,
       }
 
-      // Remove the old edge and create two new edges
-      setEdges((edges) => {
-        const filteredEdges = edges.filter((e) => e.id !== selectedEdgeId)
-        const newEdges = [
-          {
-            id: `${edge.source}-${newAgentNode.id}`,
-            source: edge.source,
-            target: newAgentNode.id,
-            type: 'custom',
-          },
-          {
-            id: `${newAgentNode.id}-${edge.target}`,
-            source: newAgentNode.id,
-            target: edge.target,
-            type: 'custom',
-          },
-        ]
-        return [...filteredEdges, ...newEdges]
-      })
+      // Remove the original edge and add the new node
+      setEdges((edges) => edges.filter((e) => e.id !== selectedEdgeId))
+      setNodes((nodes) => [...nodes, newNode])
 
-      // Add the new node
-      setNodes((nodes) => [...nodes, newAgentNode])
+      // Create new edges connecting through the agent
+      const newEdge1: Edge = {
+        id: `edge-${Date.now()}-1`,
+        source: edge.source,
+        target: newNode.id,
+        type: 'custom',
+      }
+
+      const newEdge2: Edge = {
+        id: `edge-${Date.now()}-2`,
+        source: newNode.id,
+        target: edge.target,
+        type: 'custom',
+      }
+
+      setEdges((prevEdges) => [...prevEdges, newEdge1, newEdge2])
 
       // Close dropdown
       setShowAgentDropdown(false)
       setSelectedEdgeId(null)
     },
-    [edges, selectedEdgeId, dropdownPosition, setEdges, setNodes, removeNode]
+    [edges, selectedEdgeId, setEdges, setNodes, removeNode]
+  )
+
+  const handleToolSelection = useCallback(
+    (tool: ToolInfo) => {
+      if (!selectedEdgeId) return
+
+      // Find the selected edge
+      const edge = edges.find((e) => e.id === selectedEdgeId)
+      if (!edge) return
+
+      // Create new tool node
+      const nodeId = `tool-${tool.id}-${Date.now()}`
+      const newNode: Node = {
+        id: nodeId,
+        type: 'toolNode',
+        position: { x: 400, y: 200 },
+        data: { 
+          toolInfo: tool,
+          onRemove: () => removeNode(nodeId)
+        },
+        draggable: true,
+      }
+      
+      // Remove the original edge and add the new node
+      setEdges((edges) => edges.filter((e) => e.id !== selectedEdgeId))
+      setNodes((nodes) => [...nodes, newNode])
+      
+      // Create new edges connecting through the tool
+      const newEdge1: Edge = {
+        id: `edge-${Date.now()}-1`,
+        source: edge.source,
+        target: newNode.id,
+        type: 'custom',
+      }
+      
+      const newEdge2: Edge = {
+        id: `edge-${Date.now()}-2`,
+        source: newNode.id,
+        target: edge.target,
+        type: 'custom',
+      }
+      
+      setEdges((prevEdges) => [...prevEdges, newEdge1, newEdge2])
+      
+      // Close dropdown
+      setShowAgentDropdown(false)
+      setSelectedEdgeId(null)
+    },
+    [edges, selectedEdgeId, setEdges, setNodes, removeNode]
   )
 
   // Add agent to workflow from sidebar
@@ -236,6 +306,30 @@ export default function WorkflowPage() {
     [setNodes, removeNode]
   )
 
+  // Add tool to workflow from sidebar
+  const addToolToWorkflow = useCallback(
+    (tool: ToolInfo) => {
+      const nodeId = `tool-${tool.id}-${Date.now()}`
+
+      const newNode: Node = {
+        id: nodeId,
+        type: 'toolNode',
+        data: {
+          toolInfo: tool,
+          onRemove: () => removeNode(nodeId),
+        },
+        position: {
+          x: Math.random() * X_POSITION_RANGE + X_POSITION_OFFSET,
+          y: Math.random() * Y_POSITION_RANGE + Y_POSITION_OFFSET,
+        },
+        draggable: true,
+      }
+
+      setNodes((nodes) => [...nodes, newNode])
+    },
+    [setNodes, removeNode]
+  )
+
   // Action handlers
   const handleSave = () => {
     setShowSaveModal(true)
@@ -258,7 +352,7 @@ export default function WorkflowPage() {
   }
 
   const handleTest = async () => {
-    // First save the workflow to get an ID if we don't have one
+    //  save the workflow to get an ID
     if (!currentWorkflowId) {
       try {
         const workflowData: WorkflowData = {
@@ -315,12 +409,6 @@ export default function WorkflowPage() {
     }
   }
 
-  // system selection removed
-
-  const handleCloseDropdown = () => {
-    setShowAgentDropdown(false)
-    setSelectedEdgeId(null)
-  }
 
   // Right sidebar handlers  
   const handleWorkflowLoad = (workflow: SavedWorkflow) => {
@@ -376,48 +464,93 @@ export default function WorkflowPage() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Panel - Agent Library */}
+        {/* Left Panel - Unified Library */}
         <div className="w-64 bg-white border-r border-gray-200 flex flex-col shrink-0">
           <div className="p-3 border-b border-gray-200">
-            <h3 className="font-semibold text-gray-900 text-sm mb-1">Agent Library</h3>
-            <p className="text-xs text-gray-600">Click agents to add to workflow</p>
+            <h3 className="font-semibold text-gray-900 text-sm mb-1">Workflow Library</h3>
+            <p className="text-xs text-gray-600">Drag items to add to workflow</p>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-3">
-            {loading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-black mx-auto mb-2"></div>
-                <p className="text-xs text-gray-600">Loading agents...</p>
-              </div>
-            ) : agents.length === 0 ? (
-              <div className="text-center py-8">
-                <Bot className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-xs text-gray-600 mb-3">No agents available</p>
-                <Button size="sm" className="bg-black hover:bg-gray-800 text-xs">
-                  <Plus className="w-3 h-3 mr-1" />
-                  Create Agent
-                </Button>
-              </div>
-            ) : (
+          <div className="flex-1 overflow-y-auto">
+            {/* Tool Section */}
+            <div className="p-3 border-b border-gray-100">
+              <h4 className="font-medium text-gray-800 text-xs mb-3 uppercase tracking-wide">Tools</h4>
               <div className="space-y-2">
-                {agents.map((agent) => (
+                {availableTools.map((tool) => (
                   <div
-                    key={agent.id}
-                    onClick={() => addAgentToWorkflow(agent)}
-                    className="p-2 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors"
+                    key={tool.id}
+                    onClick={() => addToolToWorkflow(tool)}
+                    className="p-2.5 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 hover:border-orange-300 cursor-pointer hover:from-orange-50 hover:to-orange-100 transition-all duration-200 group"
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      <Bot className="w-3 h-3 text-gray-600" />
-                      <span className="font-medium text-xs text-gray-900 truncate">{agent.name}</span>
-                      {agent.isActive && (
-                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                      )}
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
+                        tool.icon === 'web-search' ? 'bg-blue-500' :
+                        tool.icon === 'code-execution' ? 'bg-green-500' : 'bg-purple-500'
+                      }`}>
+                        {tool.icon === 'web-search' && <Globe className="w-3 h-3 text-white" />}
+                        {tool.icon === 'code-execution' && <Code className="w-3 h-3 text-white" />}
+                        {tool.icon === 'file-analysis' && <FileText className="w-3 h-3 text-white" />}
+                      </div>
+                      <span className="font-medium text-xs text-gray-900 truncate group-hover:text-orange-800">
+                        {tool.name}
+                      </span>
+                      <span className="text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-medium">
+                        Tool
+                      </span>
                     </div>
-                    <p className="text-xs text-gray-600 line-clamp-2">{agent.description}</p>
+                    <p className="text-xs text-gray-600 line-clamp-2 ml-8">{tool.description}</p>
                   </div>
                 ))}
               </div>
-            )}
+            </div>
+
+            {/* Agent Section */}
+            <div className="p-3">
+              <h4 className="font-medium text-gray-800 text-xs mb-3 uppercase tracking-wide">Agents</h4>
+              {loading ? (
+                <div className="text-center py-6">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black mx-auto mb-2"></div>
+                  <p className="text-xs text-gray-600">Loading agents...</p>
+                </div>
+              ) : agents.length === 0 ? (
+                <div className="text-center py-6">
+                  <Bot className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                  <p className="text-xs text-gray-600 mb-3">No agents available</p>
+                  <Button size="sm" className="bg-black hover:bg-gray-800 text-xs">
+                    <Plus className="w-3 h-3 mr-1" />
+                    Create Agent
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {agents.map((agent) => (
+                    <div
+                      key={agent.id}
+                      onClick={() => addAgentToWorkflow(agent)}
+                      className="p-2.5 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 hover:border-blue-300 cursor-pointer hover:from-blue-50 hover:to-blue-100 transition-all duration-200 group"
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-6 h-6 bg-blue-500 rounded-lg flex items-center justify-center">
+                          <Bot className="w-3 h-3 text-white" />
+                        </div>
+                        <span className="font-medium text-xs text-gray-900 truncate group-hover:text-blue-800">
+                          {agent.name}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {agent.isActive && (
+                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                          )}
+                          <span className="text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full font-medium">
+                            Agent
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-600 line-clamp-2 ml-8">{agent.description}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -433,8 +566,10 @@ export default function WorkflowPage() {
               showAgentDropdown={showAgentDropdown}
               dropdownPosition={dropdownPosition}
               agents={agents}
+              tools={availableTools}
               onAgentSelection={handleAgentSelection}
-              onCloseDropdown={handleCloseDropdown}
+              onToolSelection={handleToolSelection}
+              onCloseDropdown={() => setShowAgentDropdown(false)}
             />
           </div>
         </div>

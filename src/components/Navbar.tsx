@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bot, Workflow, Users, Plus, Home } from 'lucide-react'
+import { Bot, Workflow, Users, Plus, Home, Wrench } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export const Navbar = () => {
@@ -21,6 +21,12 @@ export const Navbar = () => {
       href: '/workflow',
       icon: Workflow,
       active: pathname === '/workflow'
+    },
+    {
+      name: 'Tools',
+      href: '/tools',
+      icon: Wrench,
+      active: pathname === '/tools'
     },
     {
       name: 'Agent Management',
