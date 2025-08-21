@@ -3,6 +3,7 @@
 import React from 'react'
 import { Globe, Code, FileText, Wrench, Info } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
+import { AuthGuard } from '@/components/auth/AuthGuard'
 
 // Tool information interface
 interface ToolInfo {
@@ -108,8 +109,9 @@ const colorMap = {
 
 export default function ToolsPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <AuthGuard requireAuth={true}>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
       
       {/* Page Header */}
       <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-6">
@@ -213,6 +215,7 @@ export default function ToolsPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </AuthGuard>
   )
 }

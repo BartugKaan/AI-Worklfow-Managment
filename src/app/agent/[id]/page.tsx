@@ -1,12 +1,14 @@
 'use client'
 
+import React, { useState, useEffect } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { useAgents } from '@/hooks/useAgents'
+import { Navbar } from '@/components/Navbar'
+import { AuthGuard } from '@/components/auth/AuthGuard'
 import { MessageSquare, Send, Loader2, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { useAgents } from '@/hooks/useAgents'
 import FilePickerButton from '@/components/FilePickerButton'
-import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
 import Link from 'next/link'
 
 interface Message {
@@ -141,9 +143,11 @@ export default function AgentChatPage() {
   }
 
   return (
-    <div className="h-full w-full bg-white text-black flex flex-col">
-      {/* Header */}
-      <div className="p-6 border-b border-gray-200 bg-white shrink-0">
+    <AuthGuard requireAuth={true}>
+      <div className="h-full w-full bg-white text-black flex flex-col">
+        <Navbar />
+        {/* Header */}
+        <div className="p-6 border-b border-gray-200 bg-white shrink-0">
         <div className="flex items-center gap-4 mb-4">
           <Link href="/">
             <Button variant="outline" size="sm">
@@ -289,6 +293,7 @@ export default function AgentChatPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </AuthGuard>
   )
 }

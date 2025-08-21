@@ -3,11 +3,13 @@
 import { Bot, MessageSquare, Plus, Workflow, Users, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAgents } from '@/hooks/useAgents'
+import { useAuth } from '@/contexts/AuthContext'
 import { Navbar } from '@/components/Navbar'
 import Link from 'next/link'
 
 export default function Home() {
   const { agents, loading } = useAgents()
+  const { isAuthenticated } = useAuth()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -29,81 +31,144 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
-                <Plus className="w-5 h-5 text-white" />
+        {/* Quick Actions - Based on authentication status */}
+        {isAuthenticated ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+                  <Plus className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Create Agent
+                </h3>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900">
-                Create Agent
-              </h3>
+              <p className="text-gray-600 mb-6">
+                Start by creating a custom AI agent with specific prompts and
+                tool configurations tailored to your needs.
+              </p>
+              <Link href="/add-agent">
+                <Button className="w-full bg-black hover:bg-gray-800">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create New Agent
+                </Button>
+              </Link>
             </div>
-            <p className="text-gray-600 mb-6">
-              Start by creating a custom AI agent with specific prompts and
-              tool configurations tailored to your needs.
-            </p>
-            <Link href="/add-agent">
-              <Button className="w-full bg-black hover:bg-gray-800">
-                <Plus className="w-4 h-4 mr-2" />
-                Create New Agent
-              </Button>
-            </Link>
-          </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5 text-white" />
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <Users className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Manage Agents
+                </h3>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900">
-                Manage Agents
-              </h3>
+              <p className="text-gray-600 mb-6">
+                View, edit, and manage all your AI agents. Configure their settings,
+                activate or deactivate them as needed.
+              </p>
+              <Link href="/agents">
+                <Button variant="outline" className="w-full">
+                  <Users className="w-4 h-4 mr-2" />
+                  View All Agents
+                </Button>
+              </Link>
             </div>
-            <p className="text-gray-600 mb-6">
-              View, edit, and manage all your AI agents. Configure their settings,
-              activate or deactivate them as needed.
-            </p>
-            <Link href="/agents">
-              <Button variant="outline" className="w-full">
-                <Users className="w-4 h-4 mr-2" />
-                View All Agents
-              </Button>
-            </Link>
-          </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
-                <Workflow className="w-5 h-5 text-white" />
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+                  <Workflow className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Build Workflow
+                </h3>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900">
-                Build Workflow
-              </h3>
+              <p className="text-gray-600 mb-6">
+                Create drag-and-drop workflows with your agents. Design multi-agent 
+                processes and automate complex tasks.
+              </p>
+              <Link href="/workflow">
+                <Button variant="outline" className="w-full">
+                  <Workflow className="w-4 h-4 mr-2" />
+                  Open Workflow Builder
+                </Button>
+              </Link>
             </div>
-            <p className="text-gray-600 mb-6">
-              Create drag-and-drop workflows with your agents. Design multi-agent 
-              processes and automate complex tasks.
-            </p>
-            <Link href="/workflow">
-              <Button variant="outline" className="w-full">
-                <Workflow className="w-4 h-4 mr-2" />
-                Open Workflow Builder
-              </Button>
-            </Link>
           </div>
-        </div>
-
-        {/* Agents Overview */}
-        <div className="mb-12">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6">Your Agents</h3>
-          
-          {loading ? (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading agents...</p>
+        ) : (
+          // Feature introduction for non-logged in users
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-12 text-center">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <Plus className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  AI Agent Creation
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Create custom AI agents with specific prompts and tool configurations
+                </p>
+              </div>
+              
+              <div className="text-center">
+                <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Agent Management
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Manage, configure and organize all your AI agents in one place
+                </p>
+              </div>
+              
+              <div className="text-center">
+                <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <Workflow className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Workflow Builder
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Create complex workflows with drag-and-drop interface
+                </p>
+              </div>
             </div>
+            
+            <div className="border-t border-gray-200 pt-6">
+              <h4 className="text-xl font-semibold text-gray-900 mb-3">
+                Login to Get Started
+              </h4>
+              <p className="text-gray-600 mb-6">
+                Create an account or login to access all features and create your own AI agents.
+              </p>
+              <div className="flex gap-3 justify-center">
+                <Button variant="outline" className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4" />
+                  Learn More
+                </Button>
+                <Button className="bg-black hover:bg-gray-800 flex items-center gap-2">
+                  <ArrowRight className="w-4 h-4" />
+                  Get Started
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Agents Overview - Only for logged in users */}
+        {isAuthenticated && (
+          <div className="mb-12">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6">Your Agents</h3>
+            
+            {loading ? (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading agents...</p>
+              </div>
           ) : agents.length === 0 ? (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
               <Bot className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -182,6 +247,7 @@ export default function Home() {
             </div>
           )}
         </div>
+        )}
 
         {/* Getting Started Guide */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">

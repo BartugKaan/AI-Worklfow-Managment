@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useAgents } from '@/hooks/useAgents'
 import { Navbar } from '@/components/Navbar'
+import { AuthGuard } from '@/components/auth/AuthGuard'
 import { Button } from '@/components/ui/button'
 import { 
   Bot, 
@@ -73,8 +74,9 @@ export default function AgentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <AuthGuard requireAuth={true}>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
@@ -295,6 +297,7 @@ export default function AgentsPage() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </AuthGuard>
   )
 }
