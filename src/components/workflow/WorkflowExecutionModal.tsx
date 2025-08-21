@@ -16,18 +16,18 @@ interface WorkflowExecutionModalProps {
 function formatAgentOutput(output: any): React.ReactNode {
   if (typeof output === 'string') {
     // Check if it's the messy END agent output format
-    if (output.includes('İş Akışı Tamamlandı') || output.includes('İşlem Detayları:')) {
+    if (output.includes('Workflow Completed') || output.includes('Process Details:')) {
       // Extract the meaningful content from the messy format
       const lines = output.split('\n')
       const meaningfulContent = []
       let inResultSection = false
       
       for (const line of lines) {
-        if (line.includes('Sonuç Metni:')) {
+        if (line.includes('Result Text:')) {
           inResultSection = true
           continue
         }
-        if (inResultSection && line.trim() && !line.includes('Bu iş akışı başarıyla tamamlanmıştır')) {
+        if (inResultSection && line.trim() && !line.includes('This workflow has been completed successfully')) {
           // Clean up quotes and extract actual content
           const cleanLine = line.replace(/^["']|["']$/g, '').trim()
           if (cleanLine && cleanLine !== '"') {

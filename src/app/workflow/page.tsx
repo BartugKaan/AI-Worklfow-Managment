@@ -1,26 +1,46 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useRef, useEffect } from 'react'
 import {
+  ReactFlow,
+  Node,
+  Edge,
+  addEdge,
   useNodesState,
   useEdgesState,
-  addEdge,
   Connection,
-  Edge,
-  Node,
+  Background,
+  Controls,
+  MiniMap,
+  ReactFlowProvider,
+  ReactFlowInstance,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
-import { useAgents, type Agent as AppAgent } from '@/hooks/useAgents'
-import { WorkflowHeader } from '@/components/workflow/WorkflowHeader'
+import { Navbar } from '@/components/Navbar'
+import { AuthGuard } from '@/components/auth/AuthGuard'
 import { WorkflowSidebar } from '@/components/workflow/WorkflowSidebar'
-import { WorkflowCanvas } from '@/components/workflow/WorkflowCanvas'
-import { WorkflowRightSidebar } from '@/components/workflow/WorkflowRightSidebar'
 import { WorkflowSaveModal } from '@/components/workflow/WorkflowSaveModal'
 import { WorkflowExecutionModal } from '@/components/workflow/WorkflowExecutionModal'
+import { Button } from '@/components/ui/button'
+import { useAgents, type Agent as AppAgent } from '@/hooks/useAgents'
 import { useWorkflows } from '@/hooks/useWorkflows'
 import { WorkflowApiService } from '@/lib/workflow-api'
+
+import {
+  Play,
+  Save,
+  Upload,
+  Download,
+  Trash2,
+  RotateCcw,
+  Settings,
+} from 'lucide-react'
+import { WorkflowHeader } from '@/components/workflow/WorkflowHeader'
+import { WorkflowRightSidebar } from '@/components/workflow/WorkflowRightSidebar'
+import { WorkflowCanvas } from '@/components/workflow/WorkflowCanvas'
 import type { SavedWorkflow, WorkflowAgentInfo, WorkflowExecutionResult, WorkflowData } from '@/types/workflow'
+import type { ToolInfo } from '@/components/workflow/ToolCard'
 
 // Local view model for agent info on nodes
 type Agent = Pick<
@@ -37,6 +57,31 @@ const X_POSITION_RANGE = 400
 const Y_POSITION_RANGE = 200
 const X_POSITION_OFFSET = 250
 const Y_POSITION_OFFSET = 150
+
+// Available tools for workflow will be removed when back-end is ready
+const availableTools: ToolInfo[] = [
+  {
+    id: 'web-search',
+    name: 'Web Search',
+    description: 'Search the web for information and retrieve relevant data',
+    icon: 'web-search' as const,
+    color: 'blue'
+  },
+  {
+    id: 'code-execution',
+    name: 'Code Execution',
+    description: 'Execute code snippets and programming tasks',
+    icon: 'code-execution' as const,
+    color: 'green'
+  },
+  {
+    id: 'file-analysis',
+    name: 'File Analysis',
+    description: 'Analyze and process various file formats',
+    icon: 'file-analysis' as const,
+    color: 'purple'
+  }
+]
 
 // Initial nodes and edges
 const initialNodes: Node[] = [
@@ -72,7 +117,6 @@ export default function WorkflowPage() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
 
-  // Move removeNode up here, before it's used
   const removeNode = useCallback((nodeId: string) => {
     setNodes((nodes) => nodes.filter(n => n.id !== nodeId));
     setEdges((edges) => edges.filter(e => e.source !== nodeId && e.target !== nodeId));
@@ -153,7 +197,7 @@ export default function WorkflowPage() {
           agent.tool_selection_checkboxes_fileAnalysis,
       }
 
-      const newAgentNode: Node = {
+      const newNode: Node = {
         id: nodeId,
         type: 'agentNode',
         data: {
@@ -162,41 +206,85 @@ export default function WorkflowPage() {
           agentId: agent.id,
           onRemove: () => removeNode(nodeId),
         },
-        position: {
-          x: dropdownPosition.x - 96, // Center the node (width/2)
-          y: dropdownPosition.y - 60,
-        },
+        position: { x: 400, y: 200 },
         draggable: true,
       }
 
-      // Remove the old edge and create two new edges
-      setEdges((edges) => {
-        const filteredEdges = edges.filter((e) => e.id !== selectedEdgeId)
-        const newEdges = [
-          {
-            id: `${edge.source}-${newAgentNode.id}`,
-            source: edge.source,
-            target: newAgentNode.id,
-            type: 'custom',
-          },
-          {
-            id: `${newAgentNode.id}-${edge.target}`,
-            source: newAgentNode.id,
-            target: edge.target,
-            type: 'custom',
-          },
-        ]
-        return [...filteredEdges, ...newEdges]
-      })
+      // Remove the original edge and add the new node
+      setEdges((edges) => edges.filter((e) => e.id !== selectedEdgeId))
+      setNodes((nodes) => [...nodes, newNode])
 
-      // Add the new node
-      setNodes((nodes) => [...nodes, newAgentNode])
+      // Create new edges connecting through the agent
+      const newEdge1: Edge = {
+        id: `edge-${Date.now()}-1`,
+        source: edge.source,
+        target: newNode.id,
+        type: 'custom',
+      }
+
+      const newEdge2: Edge = {
+        id: `edge-${Date.now()}-2`,
+        source: newNode.id,
+        target: edge.target,
+        type: 'custom',
+      }
+
+      setEdges((prevEdges) => [...prevEdges, newEdge1, newEdge2])
 
       // Close dropdown
       setShowAgentDropdown(false)
       setSelectedEdgeId(null)
     },
-    [edges, selectedEdgeId, dropdownPosition, setEdges, setNodes, removeNode]
+    [edges, selectedEdgeId, setEdges, setNodes, removeNode]
+  )
+
+  const handleToolSelection = useCallback(
+    (tool: ToolInfo) => {
+      if (!selectedEdgeId) return
+
+      // Find the selected edge
+      const edge = edges.find((e) => e.id === selectedEdgeId)
+      if (!edge) return
+
+      // Create new tool node
+      const nodeId = `tool-${tool.id}-${Date.now()}`
+      const newNode: Node = {
+        id: nodeId,
+        type: 'toolNode',
+        position: { x: 400, y: 200 },
+        data: { 
+          toolInfo: tool,
+          onRemove: () => removeNode(nodeId)
+        },
+        draggable: true,
+      }
+      
+      // Remove the original edge and add the new node
+      setEdges((edges) => edges.filter((e) => e.id !== selectedEdgeId))
+      setNodes((nodes) => [...nodes, newNode])
+      
+      // Create new edges connecting through the tool
+      const newEdge1: Edge = {
+        id: `edge-${Date.now()}-1`,
+        source: edge.source,
+        target: newNode.id,
+        type: 'custom',
+      }
+      
+      const newEdge2: Edge = {
+        id: `edge-${Date.now()}-2`,
+        source: newNode.id,
+        target: edge.target,
+        type: 'custom',
+      }
+      
+      setEdges((prevEdges) => [...prevEdges, newEdge1, newEdge2])
+      
+      // Close dropdown
+      setShowAgentDropdown(false)
+      setSelectedEdgeId(null)
+    },
+    [edges, selectedEdgeId, setEdges, setNodes, removeNode]
   )
 
   // Add agent to workflow from sidebar
@@ -236,6 +324,30 @@ export default function WorkflowPage() {
     [setNodes, removeNode]
   )
 
+  // Add tool to workflow from sidebar
+  const addToolToWorkflow = useCallback(
+    (tool: ToolInfo) => {
+      const nodeId = `tool-${tool.id}-${Date.now()}`
+
+      const newNode: Node = {
+        id: nodeId,
+        type: 'toolNode',
+        data: {
+          toolInfo: tool,
+          onRemove: () => removeNode(nodeId),
+        },
+        position: {
+          x: Math.random() * X_POSITION_RANGE + X_POSITION_OFFSET,
+          y: Math.random() * Y_POSITION_RANGE + Y_POSITION_OFFSET,
+        },
+        draggable: true,
+      }
+
+      setNodes((nodes) => [...nodes, newNode])
+    },
+    [setNodes, removeNode]
+  )
+
   // Action handlers
   const handleSave = () => {
     setShowSaveModal(true)
@@ -258,7 +370,7 @@ export default function WorkflowPage() {
   }
 
   const handleTest = async () => {
-    // First save the workflow to get an ID if we don't have one
+    //  save the workflow to get an ID
     if (!currentWorkflowId) {
       try {
         const workflowData: WorkflowData = {
@@ -315,12 +427,6 @@ export default function WorkflowPage() {
     }
   }
 
-  // system selection removed
-
-  const handleCloseDropdown = () => {
-    setShowAgentDropdown(false)
-    setSelectedEdgeId(null)
-  }
 
   // Right sidebar handlers  
   const handleWorkflowLoad = (workflow: SavedWorkflow) => {
@@ -341,38 +447,49 @@ export default function WorkflowPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      {/* Header */}
+    <AuthGuard requireAuth={true}>
+      <div className="h-screen flex flex-col bg-gray-50">
+        <Navbar />
+      
+      {/* Workflow Header */}
       <WorkflowHeader
         onSave={handleSave}
         onTest={handleTest}
-        isRunningTest={isExecuting}
+        isExecuting={isExecuting}
       />
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar */}
+        {/* Left Panel - Unified Library */}
         <WorkflowSidebar
           agents={agents}
+          tools={availableTools}
           loading={loading}
           onAgentAdd={addAgentToWorkflow}
+          onToolAdd={addToolToWorkflow}
         />
 
-        {/* Canvas */}
-        <WorkflowCanvas
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          showAgentDropdown={showAgentDropdown}
-          dropdownPosition={dropdownPosition}
-          agents={agents}
-          onAgentSelection={handleAgentSelection}
-          onCloseDropdown={handleCloseDropdown}
-        />
+        {/* Canvas Area */}
+        <div className="flex-1 relative h-full">
+          <div className="absolute inset-0">
+            <WorkflowCanvas
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              showAgentDropdown={showAgentDropdown}
+              dropdownPosition={dropdownPosition}
+              agents={agents}
+              tools={availableTools}
+              onAgentSelection={handleAgentSelection}
+              onToolSelection={handleToolSelection}
+              onCloseDropdown={() => setShowAgentDropdown(false)}
+            />
+          </div>
+        </div>
 
-        {/* Right Sidebar - Saved Workflows */}
+        {/* Right Panel - Saved Workflows */}
         <WorkflowRightSidebar
           savedWorkflows={savedWorkflows}
           onWorkflowLoad={handleWorkflowLoad}
@@ -402,6 +519,7 @@ export default function WorkflowPage() {
         onSave={handleSaveWorkflow}
         isLoading={isSaving}
       />
-    </div>
+      </div>
+    </AuthGuard>
   )
 }

@@ -4,12 +4,14 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Navbar } from '@/components/Navbar'
+import { AuthGuard } from '@/components/auth/AuthGuard'
 import { ArrowLeft, Save, Sparkles, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useAgents, CreateAgentData } from '@/hooks/useAgents'
-import { Label } from '@/components/ui/label'
 
 function AddAgentPage() {
   const router = useRouter()
@@ -46,8 +48,7 @@ function AddAgentPage() {
       },
     }))
   }
-
-  // Generate agent configuration using Python backend
+// Generate agent configuration with backend
   const handleGenerateAgent = async () => {
     if (!creationPrompt.trim()) {
       alert('Please provide a description for your agent')
@@ -133,9 +134,11 @@ function AddAgentPage() {
   }
 
   return (
-    <div className="h-full w-full bg-white text-black flex flex-col">
-      {/* Header */}
-      <div className="p-6 border-b border-gray-200 bg-white shrink-0">
+    <AuthGuard requireAuth={true}>
+      <div className="h-full w-full bg-white text-black flex flex-col">
+        <Navbar />
+        {/* Header */}
+        <div className="p-6 border-b border-gray-200 bg-white shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
@@ -393,7 +396,8 @@ function AddAgentPage() {
           </div>
         </div>
       </form>
-    </div>
+      </div>
+    </AuthGuard>
   )
 }
 

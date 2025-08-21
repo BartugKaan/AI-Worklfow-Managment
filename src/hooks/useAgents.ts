@@ -134,7 +134,6 @@ export function useAgents() {
     isActive: boolean
   ): Promise<boolean> => {
     try {
-      // First, set all agents to inactive if we're activating this one
       if (isActive) {
         const updatedAgents = agents.map((agent) => ({
           ...agent,

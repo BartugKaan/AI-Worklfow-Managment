@@ -1,14 +1,16 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
+import { useAgents, CreateAgentData } from '@/hooks/useAgents'
+import { Navbar } from '@/components/Navbar'
+import { AuthGuard } from '@/components/auth/AuthGuard'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ArrowLeft, Save, Sparkles, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { useAgents, CreateAgentData } from '@/hooks/useAgents'
 import { Label } from '@/components/ui/label'
 
 function EditAgentPage() {
@@ -189,9 +191,11 @@ function EditAgentPage() {
   }
 
   return (
-    <div className="h-full w-full bg-white text-black flex flex-col">
-      {/* Header */}
-      <div className="p-6 border-b border-gray-200 bg-white shrink-0">
+    <AuthGuard requireAuth={true}>
+      <div className="h-full w-full bg-white text-black flex flex-col">
+        <Navbar />
+        {/* Header */}
+        <div className="p-6 border-b border-gray-200 bg-white shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
@@ -451,7 +455,8 @@ function EditAgentPage() {
           </div>
         </div>
       </form>
-    </div>
+      </div>
+    </AuthGuard>
   )
 }
 

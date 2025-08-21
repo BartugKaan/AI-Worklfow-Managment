@@ -3,6 +3,7 @@ import { Handle, Position } from '@xyflow/react'
 import { Play, Square } from 'lucide-react'
 import type { WorkflowAgentInfo } from '@/types/workflow'
 import { AgentCard } from './AgentCard'
+import { ToolCard, type ToolInfo } from './ToolCard'
 
 // Custom Node Components with Enhanced Connection Handles
 export const StartNode = () => {
@@ -92,9 +93,44 @@ export const AgentNode = ({ data }: { data: AgentNodeData }) => {
   )
 }
 
+type ToolNodeData = {
+  toolInfo?: ToolInfo
+  onRemove?: () => void
+}
+
+export const ToolNode = ({ data }: { data: ToolNodeData }) => {
+  return (
+    <div className="relative group">
+      <div className="transition-all duration-300 group-hover:shadow-2xl group-hover:scale-105">
+        {data.toolInfo ? (
+          <ToolCard tool={data.toolInfo} onRemove={data.onRemove} />
+        ) : null}
+      </div>
+      {/* Modern Input Handle */}
+      <Handle
+        type="target"
+        position={Position.Left}
+        className="!w-5 !h-5 !bg-orange-600 !border-3 !border-white !shadow-xl hover:!scale-150 transition-all duration-200 !rounded-full"
+        style={{ left: '-10px' }}
+      />
+      {/* Modern Output Handle */}
+      <Handle
+        type="source"
+        position={Position.Right}
+        className="!w-5 !h-5 !bg-orange-600 !border-3 !border-white !shadow-xl hover:!scale-150 transition-all duration-200 !rounded-full"
+        style={{ right: '-10px' }}
+      />
+      {/* Connection hint circles */}
+      <div className="connection-hint absolute -left-3 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-orange-400/30 rounded-full pointer-events-none backdrop-blur-sm"></div>
+      <div className="connection-hint absolute -right-3 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-orange-400/30 rounded-full pointer-events-none backdrop-blur-sm"></div>
+    </div>
+  )
+}
+
 // Node types configuration
 export const nodeTypes = {
   startNode: StartNode,
   endNode: EndNode,
   agentNode: AgentNode,
+  toolNode: ToolNode,
 }
