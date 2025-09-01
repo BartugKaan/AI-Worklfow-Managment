@@ -3,7 +3,7 @@
  * API service for authentication operations with agent-workflow backend
  */
 
-const AGENT_WORKFLOW_BASE_URL = 'http://localhost:8000'
+const AGENT_WORKFLOW_BASE_URL = 'http://localhost:8001'
 
 export interface LoginRequest {
   username: string // will be used as email
