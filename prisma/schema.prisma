@@ -10,6 +10,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  fullName  String
+  password  String   // Will be hashed
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // User's personal agents
+  agents    Agent[]
+  workflows Workflow[]
+  
+  @@map("users")
+}
+
 model Agent {
   id          String   @id @default(cuid())
   name        String
@@ -26,5 +41,23 @@ model Agent {
   tool_selection_checkboxes_codeExecution   Boolean @default(false)
   tool_selection_checkboxes_fileAnalysis    Boolean @default(false)
   
+  // Optional user relationship - null means global agent
+  userId    String?
+  user      User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
   @@map("agents")
+}
+
+model Workflow {
+  id        String   @id @default(cuid())
+  name      String
+  data      String   // JSON string of workflow data
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // User relationship
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("workflows")
 }
