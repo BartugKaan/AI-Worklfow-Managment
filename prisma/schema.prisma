@@ -49,15 +49,19 @@ model Agent {
 }
 
 model Workflow {
-  id        String   @id @default(cuid())
-  name      String
-  data      String   // JSON string of workflow data
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  nodeCount   Int      @default(0)
+  agentCount  Int      @default(0)
+  nodes       String   // JSON string of nodes array
+  edges       String   // JSON string of edges array
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   
-  // User relationship
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // User relationship - nullable for now to support existing data
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("workflows")
 }
