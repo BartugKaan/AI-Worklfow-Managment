@@ -1,9 +1,9 @@
 /**
  * Authentication API Service
- * API service for authentication operations with agent-workflow backend
+ * API service for authentication operations with Next.js backend
  */
 
-const AGENT_WORKFLOW_BASE_URL = 'http://localhost:8001'
+const API_BASE_URL = '/api/auth'
 
 export interface LoginRequest {
   username: string // will be used as email
@@ -33,7 +33,7 @@ export class AuthApiService {
    */
   static async register(userData: RegisterRequest): Promise<UserResponse> {
     try {
-      const response = await fetch(`${AGENT_WORKFLOW_BASE_URL}/register`, {
+      const response = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -43,10 +43,11 @@ export class AuthApiService {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.detail || 'Registration failed')
+        throw new Error(errorData.error || 'Registration failed')
       }
 
-      return await response.json()
+      const result = await response.json()
+      return result.user
     } catch (error) {
       console.error('Register API error:', error)
       throw error
@@ -63,7 +64,7 @@ export class AuthApiService {
       formData.append('username', credentials.username)
       formData.append('password', credentials.password)
 
-      const response = await fetch(`${AGENT_WORKFLOW_BASE_URL}/token`, {
+      const response = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
         body: formData,
       })
@@ -85,7 +86,7 @@ export class AuthApiService {
    */
   static async getCurrentUser(token: string): Promise<UserResponse> {
     try {
-      const response = await fetch(`${AGENT_WORKFLOW_BASE_URL}/users/me`, {
+      const response = await fetch(`${API_BASE_URL}/me`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

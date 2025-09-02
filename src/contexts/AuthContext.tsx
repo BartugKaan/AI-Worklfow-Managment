@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 import { AuthApiService, UserResponse, LoginRequest, RegisterRequest } from '@/lib/auth-api'
 
 interface AuthContextType {
@@ -21,6 +22,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<UserResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
 
   // Check current auth status when page loads
   useEffect(() => {
@@ -102,6 +104,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     AuthApiService.logout()
     setUser(null)
+    router.push('/') // Ana sayfaya yönlendirme
   }
 
   const value: AuthContextType = {

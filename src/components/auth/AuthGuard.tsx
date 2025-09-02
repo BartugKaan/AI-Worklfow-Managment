@@ -3,6 +3,7 @@
 import React, { ReactNode } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Loader2 } from 'lucide-react'
+import { Navbar } from '@/components/Navbar'
 
 interface AuthGuardProps {
   children: ReactNode
@@ -30,22 +31,25 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
   // Auth required but user is not logged in
   if (requireAuth && !isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center max-w-md mx-auto p-6">
-          <div className="mb-6">
-            <div className="w-16 h-16 bg-black rounded-lg flex items-center justify-center mx-auto mb-4">
-              <span className="text-white text-2xl font-bold">AI</span>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="flex items-center justify-center" style={{ minHeight: 'calc(100vh - 64px)' }}>
+          <div className="text-center max-w-md mx-auto p-6">
+            <div className="mb-6">
+              <div className="w-16 h-16 bg-black rounded-lg flex items-center justify-center mx-auto mb-4">
+                <span className="text-white text-2xl font-bold">AI</span>
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                Login Required
+              </h1>
+              <p className="text-gray-600">
+                You need to log in to access this page.
+              </p>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Login Required
-            </h1>
-            <p className="text-gray-600">
-              You need to log in to access this page.
-            </p>
-          </div>
-          
-          <div className="text-sm text-gray-500">
-            Please log in or register from the top menu.
+            
+            <div className="text-sm text-gray-500">
+              Please log in or register from the top menu.
+            </div>
           </div>
         </div>
       </div>

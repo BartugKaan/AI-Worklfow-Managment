@@ -20,6 +20,7 @@ function EditAgentPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState<CreateAgentData>({
     name: '',
     description: '',
@@ -38,11 +39,28 @@ function EditAgentPage() {
   // Load existing agent data
   useEffect(() => {
     const loadAgent = async () => {
-      if (!agentId) return
-
       setIsLoading(true)
+      setError(null)
+
       try {
-        const agent = await getAgent(agentId)
+        if (!agentId) {
+          throw new Error('No agent ID provided')
+        }
+
+        console.log('Loading agent with ID:', agentId)
+        
+        
+        const response = await fetch(`/api/agents/${agentId}`)
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error('Agent not found')
+          }
+          throw new Error(`HTTP ${response.status}: Failed to fetch agent`)
+        }
+        
+        const agent = await response.json()
+        
         if (agent) {
           setFormData({
             name: agent.name,
@@ -56,21 +74,29 @@ function EditAgentPage() {
               fileAnalysis: agent.tool_selection_checkboxes_fileAnalysis,
             },
           })
+          console.log('Agent data loaded successfully')
         } else {
-          alert('Agent not found')
-          window.location.href = '/'
+          throw new Error('Agent not found')
         }
       } catch (error) {
         console.error('Error loading agent:', error)
-        alert('Failed to load agent data')
-        window.location.href = '/'
+        const errorMessage = error instanceof Error ? error.message : 'Failed to load agent data'
+        setError(errorMessage)
+        
+        
+        alert(`Error: ${errorMessage}`)
+        setTimeout(() => {
+          window.location.href = '/'
+        }, 1000)
       } finally {
         setIsLoading(false)
       }
     }
 
-    loadAgent()
-  }, [agentId, getAgent])
+    if (agentId) {
+      loadAgent()
+    }
+  }, [agentId]) 
 
   const handleInputChange = (field: keyof CreateAgentData, value: string) => {
     setFormData((prev) => ({
@@ -182,9 +208,20 @@ function EditAgentPage() {
   if (isLoading) {
     return (
       <div className="h-full w-full bg-white text-black flex items-center justify-center">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-6 h-6 animate-spin text-gray-600" />
           <span className="text-lg">Loading agent data...</span>
+          {error && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{error}</p>
+              <Button 
+                onClick={() => window.location.href = '/'} 
+                className="mt-2 bg-red-600 hover:bg-red-700 text-white text-xs"
+              >
+                Go Back to Home
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     )
