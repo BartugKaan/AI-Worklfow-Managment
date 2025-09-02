@@ -2,8 +2,8 @@
  * Authentication utilities for JWT token handling and password hashing
  */
 
-// Using built-in Web Crypto API instead of jose for JWT handling
-// This avoids external dependencies and works with Next.js Edge Runtime
+import bcrypt from 'bcryptjs'
+
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key-change-this-in-production'
@@ -83,22 +83,13 @@ export async function verifyToken(token: string): Promise<JWTPayload> {
   }
 }
 
-/**
- * Simple password hashing (using built-in crypto)
- * Note: In production, consider using bcrypt for better security
- */
+
 export async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(password + 'salt-key-change-this')
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+  const saltRounds = 12
+  return await bcrypt.hash(password, saltRounds)
 }
 
-/**
- * Verify password against hash
- */
+
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  const hashedInput = await hashPassword(password)
-  return hashedInput === hash
+  return await bcrypt.compare(password, hash)
 }
