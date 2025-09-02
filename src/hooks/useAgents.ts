@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 export interface Agent {
   id: string
@@ -56,20 +56,51 @@ export function useAgents() {
   }
 
   // Get single agent
-  const getAgent = async (agentId: string): Promise<Agent | null> => {
+  const getAgent = useCallback(async (agentId: string): Promise<Agent | null> => {
     try {
-      const response = await fetch(`/api/agents/${agentId}`)
-      if (!response.ok) {
-        throw new Error('Failed to fetch agent')
+      if (!agentId || agentId.trim() === '') {
+        throw new Error('Invalid agent ID provided')
       }
+
+      console.log('Fetching agent with ID:', agentId)
+      
+      // Add timeout to prevent infinite loading
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      
+      const response = await fetch(`/api/agents/${agentId}`, {
+        signal: controller.signal
+      })
+      
+      clearTimeout(timeoutId)
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Agent not found')
+        }
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to fetch agent`)
+      }
+      
       const agent = await response.json()
+      console.log('Successfully fetched agent:', agent)
       return agent
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      let errorMessage = 'An error occurred'
+      
+      if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          errorMessage = 'Request timed out. Please check your connection and try again.'
+        } else {
+          errorMessage = err.message
+        }
+      }
+      
+      setError(errorMessage)
       console.error('Error fetching agent:', err)
       return null
     }
-  }
+  }, [])
 
   // Create new agent
   const createAgent = async (
