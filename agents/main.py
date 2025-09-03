@@ -1,42 +1,55 @@
-#!/usr/bin/env python3
-"""
-FastAPI Backend for AI Agent Creation
-This backend provides endpoints for generating agent configurations using GPT-4.1-mini
-"""
-
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Body, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
+import uuid
+from datetime import datetime
+import os
 import openai
 import json
-import os
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Modüler yapı için diğer modülleri import et
+from src.utils import (
+    load_environment,
+    initialize_openai_client,
+    logger,
+)
+from src.models import (
+    WorkflowBase,
+    Agent,
+    WorkflowExecutionResult,
+    WorkflowExecuteRequest,
+)
+from src.agents import get_default_agents, process_with_agent
+from src.workflow import execute_workflow_pipeline
 
-app = FastAPI(title="AI Agent Creation API", version="1.0.0")
+# Çevresel değişkenler
+load_environment()
+load_dotenv()  # Agent creation için ek dotenv yükleme
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+openai_client = initialize_openai_client()
 
-# Configure CORS for Next.js frontend
+# FastAPI uygulaması
+app = FastAPI(title="AI Agent Creation & Workflow API", version="2.0.0")
+
+# CORS ayarları - her iki uygulama için gerekli origin'leri dahil et
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3001", "http://127.0.0.1:3001"],
+    allow_origins=["*", "http://localhost:3001", "http://127.0.0.1:3001"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# In-memory veritabanı
+DB = {"workflows": [], "agents": []}
 
-# Initialize OpenAI client
-def get_openai_client():
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise HTTPException(status_code=500, detail="OpenAI API key not configured")
-    return openai.OpenAI(api_key=api_key)
+# Başlangıçta örnek ajanları ekle
+DB["agents"] = get_default_agents()
 
 
-# Pydantic models
+# Agent creation için yeni Pydantic modelleri
 class AgentCreationRequest(BaseModel):
     description: str
     temperature: Optional[float] = 0.7
@@ -80,6 +93,7 @@ class ConversationResponse(BaseModel):
     error: Optional[str] = None
 
 
+# Agent Creator Class
 class AgentCreator:
     def __init__(self, client: openai.OpenAI):
         self.client = client
@@ -169,17 +183,74 @@ Requirements:
             )
 
 
-# API Endpoints
+# OpenAI client için yardımcı fonksiyon
+def get_openai_client():
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="OpenAI API key not configured")
+    return openai.OpenAI(api_key=api_key)
+
+
+# Root endpoint'ler
 @app.get("/")
 async def root():
-    return {"message": "AI Agent Creation API", "version": "1.0.0"}
+    return {"message": "AI Agent Creation & Workflow API", "version": "2.0.0"}
 
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "service": "ai-agent-creation-api"}
+    return {"status": "healthy", "service": "ai-agent-creation-workflow-api"}
 
 
+# Ajan endpoint'leri
+@app.get("/agents")
+async def get_agents():
+    """Tüm ajanları listeler."""
+    return DB["agents"]
+
+
+@app.post("/agents")
+async def create_agent(agent: Agent):
+    """Yeni bir ajan oluşturur."""
+    # Use provided ID if available, otherwise generate new one
+    agent_id = getattr(agent, "id", None) or str(uuid.uuid4())
+    new_agent = {
+        "id": agent_id,
+        "name": agent.name,
+        "description": agent.description or "",
+        "prompt": agent.prompt,
+        "created_at": datetime.utcnow(),
+    }
+
+    DB["agents"].append(new_agent)
+    logger.info(f"Yeni ajan oluşturuldu: {agent.name}")
+
+    return new_agent
+
+
+@app.get("/agents/{agent_id}")
+async def get_agent(agent_id: str):
+    """Belirli bir ajanın detaylarını getirir."""
+    for agent in DB["agents"]:
+        if agent["id"] == agent_id:
+            return agent
+
+    raise HTTPException(status_code=404, detail="Ajan bulunamadı")
+
+
+@app.delete("/agents/{agent_id}")
+async def delete_agent(agent_id: str):
+    """Bir ajanı siler."""
+    for i, agent in enumerate(DB["agents"]):
+        if agent["id"] == agent_id:
+            del DB["agents"][i]
+            logger.info(f"Ajan silindi: {agent['name']}")
+            return {"message": "Ajan başarıyla silindi"}
+
+    raise HTTPException(status_code=404, detail="Ajan bulunamadı")
+
+
+# Yeni Agent Creation endpoint'leri
 @app.post("/api/generate-agent", response_model=AgentCreationResponse)
 async def generate_agent(request: AgentCreationRequest):
     """Generate an AI agent configuration based on user description"""
@@ -281,7 +352,143 @@ async def get_available_tools():
     }
 
 
+# İş akışı endpoint'leri
+@app.post("/workflows")
+async def create_workflow(workflow: WorkflowBase):
+    """Yeni iş akışı oluşturur veya mevcut iş akışını günceller."""
+    if workflow.id:
+        # Mevcut workflow'u güncelle
+        for i, wf in enumerate(DB["workflows"]):
+            if wf["id"] == workflow.id:
+                updated_workflow = {
+                    "id": workflow.id,
+                    "name": workflow.name,
+                    "description": workflow.description,
+                    "nodes": [node.dict() for node in workflow.nodes],
+                    "edges": [edge.dict() for edge in workflow.edges],
+                    "user_id": wf.get("user_id", "demo_user"),
+                    "created_at": wf["created_at"],
+                    "updated_at": datetime.utcnow(),
+                }
+                DB["workflows"][i] = updated_workflow
+                logger.info(f"İş akışı güncellendi: {workflow.name}")
+                return updated_workflow
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="İş akışı bulunamadı",
+        )
+
+    # Yeni workflow oluştur
+    workflow_id = str(uuid.uuid4())
+    try:
+        new_workflow = {
+            "id": workflow_id,
+            "name": workflow.name,
+            "description": workflow.description,
+            "nodes": [node.dict() for node in workflow.nodes],
+            "edges": [edge.dict() for edge in workflow.edges],
+            "user_id": "demo_user",
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+        }
+
+        DB["workflows"].append(new_workflow)
+        logger.info(f"Yeni iş akışı oluşturuldu: {workflow.name}")
+
+        return new_workflow
+    except Exception as e:
+        logger.error(f"İş akışı oluşturma hatası: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"İş akışı oluşturulamadı: {str(e)}",
+        )
+
+
+@app.get("/workflows")
+async def get_workflows():
+    """Tüm iş akışlarını listeler."""
+    return DB["workflows"]
+
+
+@app.get("/workflows/{workflow_id}")
+async def get_workflow(workflow_id: str):
+    """Belirli bir iş akışının detaylarını getirir."""
+    for workflow in DB["workflows"]:
+        if workflow["id"] == workflow_id:
+            return workflow
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="İş akışı bulunamadı",
+    )
+
+
+@app.delete("/workflows/{workflow_id}")
+async def delete_workflow(workflow_id: str):
+    """Bir iş akışını siler."""
+    for i, workflow in enumerate(DB["workflows"]):
+        if workflow["id"] == workflow_id:
+            workflow_name = workflow["name"]
+            del DB["workflows"][i]
+            logger.info(f"İş akışı silindi: {workflow_name}")
+            return {"message": "İş akışı başarıyla silindi"}
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="İş akışı bulunamadı",
+    )
+
+
+# İş akışı yürütme endpoint'i
+@app.post("/workflows/{workflow_id}/execute", response_model=WorkflowExecutionResult)
+async def execute_workflow(
+    workflow_id: str, execute_request: WorkflowExecuteRequest = Body(...)
+):
+    """Bir iş akışını yürütür."""
+    # İş akışını bul
+    workflow = None
+    for wf in DB["workflows"]:
+        if wf["id"] == workflow_id:
+            workflow = wf
+            break
+
+    if not workflow:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="İş akışı bulunamadı"
+        )
+
+    # API anahtarını kontrol et
+    if not OPENAI_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="OpenAI API anahtarı sunucu tarafında tanımlanmamış. Lütfen sunucu yöneticisine başvurun.",
+        )
+
+    # İş akışını yürüt
+    result = execute_workflow_pipeline(
+        workflow=workflow,
+        input_text=execute_request.input_text,
+        db=DB,
+        openai_client=openai_client,
+        openai_api_key=OPENAI_API_KEY,
+        process_with_agent_fn=process_with_agent,
+    )
+
+    # Sonucu döndür
+    return WorkflowExecutionResult(
+        workflow_id=result["workflow_id"],
+        results=result["results"],
+        execution_time=result["execution_time"],
+        status=result["status"],
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
 
+    print("🚀 Starting AI Agent Creation & Workflow API...")
+    print("📍 Server will be available at: http://localhost:8000")
+    print("📚 API Documentation: http://localhost:8000/docs")
+    print("🔍 Alternative docs: http://localhost:8000/redoc")
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

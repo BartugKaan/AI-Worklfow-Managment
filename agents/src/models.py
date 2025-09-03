@@ -1,33 +1,36 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel
+
+# from pydantic import BaseModel, Field, EmailStr
+
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
 
-class UserBase(BaseModel):
-    """Kullanıcı temel bilgileri."""
+# class UserBase(BaseModel):
+#     """Kullanıcı temel bilgileri."""
 
-    email: EmailStr
-    full_name: str
-
-
-class UserCreate(UserBase):
-    """Kullanıcı oluşturma için model."""
-
-    password: str
+#     email: EmailStr
+#     full_name: str
 
 
-class UserInDB(UserBase):
-    """Veritabanında saklanan kullanıcı modeli."""
+# class UserCreate(UserBase):
+#     """Kullanıcı oluşturma için model."""
 
-    id: str
-    password: str
-    created_at: datetime
+#     password: str
 
 
-class UserResponse(UserBase):
-    """Kullanıcı yanıt modeli."""
+# class UserInDB(UserBase):
+#     """Veritabanında saklanan kullanıcı modeli."""
 
-    id: str
+#     id: str
+#     password: str
+#     created_at: datetime
+
+
+# class UserResponse(UserBase):
+#     """Kullanıcı yanıt modeli."""
+
+#     id: str
 
 
 class Token(BaseModel):

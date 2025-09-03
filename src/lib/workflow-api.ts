@@ -1,7 +1,7 @@
 import type { WorkflowData, WorkflowExecutionResult } from '@/types/workflow'
 import type { Agent } from '@/hooks/useAgents'
 
-const AGENT_WORKFLOW_API_URL = 'http://localhost:8001'
+const AGENT_WORKFLOW_API_URL = 'http://localhost:8000'
 
 export class WorkflowApiService {
   /**
